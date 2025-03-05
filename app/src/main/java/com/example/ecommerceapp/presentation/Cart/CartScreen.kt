@@ -22,6 +22,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import coil.compose.AsyncImage
 import com.example.ecommerceapp.model.CartItem
+import com.example.ecommerceapp.presentation.profile.UserAddress.AddressList.AddressListViewModel
 import java.text.NumberFormat
 import java.util.*
 
@@ -29,6 +30,7 @@ import java.util.*
 @Composable
 fun CartScreen(
     viewModel: CartViewModel = viewModel(),
+    addressListViewModel: AddressListViewModel = viewModel(),
     navController: NavHostController,
     onNavigateToHome: () -> Unit,
     onNavigateToShop: () -> Unit,
@@ -38,13 +40,30 @@ fun CartScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
     var showClearCartConfirmation by remember { mutableStateOf(false) }
+    val addressUiState by addressListViewModel.uiState.collectAsState()
+    var showAddAddressDialog by remember { mutableStateOf(false) }
+
+    LaunchedEffect(Unit) {
+        addressListViewModel.loadAddresses()
+    }
+
+
+    LaunchedEffect(addressUiState.addresses, addressUiState.isLoading) {
+        if (addressUiState.isLoading) {
+            // Don't show dialog while loading
+            showAddAddressDialog = false
+        } else if (addressUiState.addresses.isEmpty()) {
+            showAddAddressDialog = true
+        } else {
+            showAddAddressDialog = false
+        }
+    }
 
     Scaffold(
         topBar = {
             CenterAlignedTopAppBar(
                 title = { Text("Shopping Cart") },
                 actions = {
-                    // Only show clear cart button if there are items
                     if (uiState.cartItems.isNotEmpty()) {
                         IconButton(onClick = { showClearCartConfirmation = true }) {
                             Icon(Icons.Default.Delete, contentDescription = "Clear Cart")
@@ -54,11 +73,10 @@ fun CartScreen(
             )
         },
         bottomBar = {
-            val selectedColor = Color.Gray // Màu bạc
+            val selectedColor = Color.Gray
             val unSelectedColor = Color.DarkGray
             NavigationBar(containerColor = Color(0xFFF0F0F0)) {
                 NavigationBarItem(
-
                     icon = { Icon(Icons.Default.Home, contentDescription = "Home") },
                     label = { Text("Home") },
                     selected = false,
@@ -68,9 +86,8 @@ fun CartScreen(
                         selectedTextColor = selectedColor,
                         unselectedIconColor = unSelectedColor,
                         unselectedTextColor = unSelectedColor,
-                        indicatorColor = Color.Black // Để không có hiệu ứng nền khi chọn
+                        indicatorColor = Color.Black
                     )
-
                 )
                 NavigationBarItem(
                     icon = { Icon(Icons.Default.ShoppingCart, contentDescription = "Shop") },
@@ -82,7 +99,7 @@ fun CartScreen(
                         selectedTextColor = selectedColor,
                         unselectedIconColor = unSelectedColor,
                         unselectedTextColor = unSelectedColor,
-                        indicatorColor = Color.Black // Để không có hiệu ứng nền khi chọn
+                        indicatorColor = Color.Black
                     )
                 )
                 NavigationBarItem(
@@ -95,9 +112,8 @@ fun CartScreen(
                         selectedTextColor = selectedColor,
                         unselectedIconColor = unSelectedColor,
                         unselectedTextColor = unSelectedColor,
-                        indicatorColor = Color.Black // Để không có hiệu ứng nền khi chọn
+                        indicatorColor = Color.Black
                     )
-
                 )
                 NavigationBarItem(
                     icon = { Icon(Icons.Default.Favorite, contentDescription = "Favorites") },
@@ -109,7 +125,7 @@ fun CartScreen(
                         selectedTextColor = selectedColor,
                         unselectedIconColor = unSelectedColor,
                         unselectedTextColor = unSelectedColor,
-                        indicatorColor = Color.Black // Để không có hiệu ứng nền khi chọn
+                        indicatorColor = Color.Black
                     )
                 )
                 NavigationBarItem(
@@ -122,7 +138,7 @@ fun CartScreen(
                         selectedTextColor = selectedColor,
                         unselectedIconColor = unSelectedColor,
                         unselectedTextColor = unSelectedColor,
-                        indicatorColor = Color.Black // Để không có hiệu ứng nền khi chọn
+                        indicatorColor = Color.Black
                     )
                 )
             }
@@ -152,7 +168,6 @@ fun CartScreen(
                     )
                 }
             } else if (uiState.cartItems.isEmpty()) {
-                // Empty cart state
                 Column(
                     modifier = Modifier
                         .fillMaxSize()
@@ -191,12 +206,27 @@ fun CartScreen(
                     }
                 }
             } else {
-                // Cart with items
                 Column(
                     modifier = Modifier
                         .fillMaxSize()
                         .padding(16.dp)
                 ) {
+                    // Display default address if available
+                    addressUiState.addresses.find { it.isDefault }?.let { defaultAddress ->
+                        Row {
+                            Text(
+                                text = "Shipping to: ",
+                                style = MaterialTheme.typography.labelLarge,
+                                fontWeight = FontWeight.SemiBold
+                            )
+                            Text(
+                                text = "${defaultAddress.fullName}, ${defaultAddress.address}, ${defaultAddress.city}, ${defaultAddress.state}, ${defaultAddress.zipCode}",
+                                style = MaterialTheme.typography.bodySmall,
+                                modifier = Modifier.padding(bottom = 6.dp)
+                            )
+                        }
+                    }
+
                     // Cart items list
                     LazyColumn(
                         modifier = Modifier
@@ -256,7 +286,6 @@ fun CartScreen(
                 }
             }
 
-            // Show snackbar for actions
             if (uiState.actionMessage != null) {
                 Snackbar(
                     modifier = Modifier
@@ -270,7 +299,6 @@ fun CartScreen(
                 }
             }
 
-            // Clear cart confirmation dialog
             if (showClearCartConfirmation) {
                 AlertDialog(
                     onDismissRequest = { showClearCartConfirmation = false },
@@ -291,6 +319,30 @@ fun CartScreen(
                             onClick = { showClearCartConfirmation = false }
                         ) {
                             Text("Cancel")
+                        }
+                    }
+                )
+            }
+
+            if (showAddAddressDialog) {
+                AlertDialog(
+                    onDismissRequest = { showAddAddressDialog = false },
+                    title = { Text("No Address Found") },
+                    text = { Text("You don't have any saved addresses. Would you like to add one now?") },
+                    confirmButton = {
+                        Button(
+                            onClick = {
+                                showAddAddressDialog = false
+                                navController.navigate("add_address")
+                            }
+                        ) {
+                            Text("Yes")
+                        }
+                    },
+                    dismissButton = {
+                        TextButton(
+                            onClick = { showAddAddressDialog = false }) {
+                            Text("No")
                         }
                     }
                 )
@@ -481,7 +533,7 @@ fun OrderSummary(
                 )
             }
 
-            Divider(modifier = Modifier.padding(vertical = 8.dp))
+            HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
 
             Row(
                 modifier = Modifier.fillMaxWidth(),
