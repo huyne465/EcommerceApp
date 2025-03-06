@@ -116,7 +116,7 @@ class FavoriteViewModel : ViewModel() {
                 favoritesRef.child(userId).child(productId).removeValue().await()
 
                 // Update product's isFavorite status
-                productsRef.child(productId).child("isFavorite").setValue(false).await()
+                productsRef.child(productId).child("favorite").setValue(false).await()
             } catch (e: Exception) {
                 _uiState.update {
                     it.copy(

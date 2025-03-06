@@ -30,7 +30,8 @@ import coil.compose.AsyncImage
 fun ProductDetailScreen(
     productId: String,
     viewModel: ProductDetailViewModel = viewModel(factory = ProductDetailViewModelFactory(productId)),
-    onNavigateBack: () -> Unit
+    onNavigateBack: () -> Unit,
+    onNavigateToCart: () -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val scrollState = rememberScrollState()
@@ -54,7 +55,7 @@ fun ProductDetailScreen(
                             tint = if (uiState.product?.isFavorite == true) Color.Red else Color.Gray
                         )
                     }
-                    IconButton(onClick = { /* Navigate to cart */ }) {
+                    IconButton(onClick = onNavigateToCart) {
                         Icon(
                             imageVector = Icons.Default.ShoppingCart,
                             contentDescription = "Cart"

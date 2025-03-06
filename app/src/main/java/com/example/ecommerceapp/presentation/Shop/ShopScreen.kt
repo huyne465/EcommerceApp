@@ -1,6 +1,4 @@
 package com.example.ecommerceapp.presentation.Shop
-
-
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -8,6 +6,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material.icons.outlined.StarOutline
 import androidx.compose.material3.*
@@ -38,7 +37,6 @@ fun ShopScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val filteredProducts = viewModel.getFilteredAndSortedProducts()
-
     val categories = listOf("T-shirts", "Crop tops", "Sleeveless", "More")
     var selectedCategory by remember { mutableStateOf<String?>(null) }
     var showSearchBar by remember { mutableStateOf(false) }
@@ -67,6 +65,10 @@ fun ShopScreen(
                 CenterAlignedTopAppBar(
                     title = { Text("Shop") },
                     actions = {
+                        // Add refresh button here
+                        IconButton(onClick = { viewModel.loadProducts(forceReload = true) }) {
+                            Icon(Icons.Default.Refresh, contentDescription = "Refresh")
+                        }
                         IconButton(onClick = { showSearchBar = true }) {
                             Icon(Icons.Default.Search, contentDescription = "Search")
                         }
@@ -326,7 +328,7 @@ fun SearchBar(
         },
         navigationIcon = {
             IconButton(onClick = onSearchClose) {
-                Icon(Icons.Default.ArrowBack, contentDescription = "Back")
+                Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
             }
         },
         actions = {
@@ -380,7 +382,7 @@ fun SortOptionsMenu(
                 }
             }
 
-            Divider()
+            HorizontalDivider()
 
             SortOption(text = "Name: A to Z") {
                 onSortOrderSelected(ShopViewModel.SortOrder.NAME_A_TO_Z)

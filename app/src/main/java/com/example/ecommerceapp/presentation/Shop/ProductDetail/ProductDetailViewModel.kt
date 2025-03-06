@@ -114,13 +114,13 @@ class ProductDetailViewModel(private val productId: String) : ViewModel() {
                     favoritesRef.child(productId).setValue(product).await()
 
                     // Also update isFavorite status in products node
-                    productsRef.child(productId).child("isFavorite").setValue(true).await()
+                    productsRef.child(productId).child("favorite").setValue(true).await()
                 } else {
                     // Remove from favorites node
                     favoritesRef.child(productId).removeValue().await()
 
                     // Update isFavorite status in products node
-                    productsRef.child(productId).child("isFavorite").setValue(false).await()
+                    productsRef.child(productId).child("favorite").setValue(false).await()
                 }
 
                 // Show success message

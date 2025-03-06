@@ -18,6 +18,9 @@ import java.util.UUID
 
 class ShopViewModel : ViewModel() {
 
+    // Add a flag to track if we've already loaded products
+    private var hasLoadedProducts = false
+
     // UI State for Shop screen
     data class ShopUiState(
         val products: List<Product> = emptyList(),
@@ -49,10 +52,19 @@ class ShopViewModel : ViewModel() {
         loadProducts()
     }
 
-    fun loadProducts() {
+    private var productsListener: ValueEventListener? = null
+
+    fun loadProducts(forceReload: Boolean = false) {
+        // Skip loading if we've already loaded products and not forcing reload
+        if (hasLoadedProducts && !forceReload) return
+
         _uiState.update { it.copy(isLoading = true, errorMessage = null) }
 
-        productsRef.addValueEventListener(object : ValueEventListener {
+        // Remove any existing listener first
+        productsListener?.let { productsRef.removeEventListener(it) }
+
+        // Create and store the listener
+        productsListener = object : ValueEventListener {
             override fun onDataChange(snapshot: DataSnapshot) {
                 val productsList = mutableListOf<Product>()
 
@@ -73,6 +85,9 @@ class ShopViewModel : ViewModel() {
                         isLoading = false
                     )
                 }
+
+                // Mark that we've loaded products
+                hasLoadedProducts = true
             }
 
             override fun onCancelled(error: DatabaseError) {
@@ -83,7 +98,16 @@ class ShopViewModel : ViewModel() {
                     )
                 }
             }
-        })
+        }
+
+        // Add the listener
+        productsRef.addValueEventListener(productsListener!!)
+    }
+
+    // Don't forget to clean up in onCleared
+    override fun onCleared() {
+        super.onCleared()
+        productsListener?.let { productsRef.removeEventListener(it) }
     }
 
     fun setFilterCategory(category: String?) {
@@ -160,24 +184,24 @@ class ShopViewModel : ViewModel() {
                     favoritesRef.child(productId).setValue(productToUpdate.copy(isFavorite = true)).await()
 
                     // Also update isFavorite status in products node
-                    productsRef.child(productId).child("isFavorite").setValue(true).await()
+                    productsRef.child(productId).child("favorite").setValue(true).await()
                 } else {
                     // Remove from favorites node
                     favoritesRef.child(productId).removeValue().await()
 
                     // Update isFavorite status in products node
-                    productsRef.child(productId).child("isFavorite").setValue(false).await()
+                    productsRef.child(productId).child("favorite").setValue(false).await()
                 }
             } catch (e: Exception) {
                 // Revert the optimistic update on error
                 val revertedProducts = _uiState.value.products.map {
                     if (it.id == productId) it.copy(isFavorite = !newFavoriteStatus) else it
-                }
+                    }
 
-                _uiState.update {
-                    it.copy(products = revertedProducts)
+                    _uiState.update {
+                        it.copy(products = revertedProducts)
+                    }
                 }
             }
         }
     }
-}
