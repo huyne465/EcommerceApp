@@ -18,9 +18,6 @@ import java.util.UUID
 
 class ShopViewModel : ViewModel() {
 
-    // Add a flag to track if we've already loaded products
-    private var hasLoadedProducts = false
-
     // UI State for Shop screen
     data class ShopUiState(
         val products: List<Product> = emptyList(),
@@ -30,6 +27,14 @@ class ShopViewModel : ViewModel() {
         val searchQuery: String = "",
         val sortOrder: SortOrder = SortOrder.NONE
     )
+
+    // Add this companion object to store persistent state
+    companion object {
+        // Static variables to maintain state across instances
+        private var persistentSortOrder: SortOrder = SortOrder.NONE
+        private var persistentFilterCategory: String? = null
+        private var persistentSearchQuery: String = ""
+    }
 
     enum class SortOrder {
         NONE,
@@ -48,81 +53,116 @@ class ShopViewModel : ViewModel() {
     private val userId: String
         get() = FirebaseAuth.getInstance().currentUser?.uid ?: "anonymous_${UUID.randomUUID()}"
 
-    init {
-        loadProducts()
-    }
-
     private var productsListener: ValueEventListener? = null
 
+    init {
+
+        // Apply persisted settings on initialization
+        _uiState.update { it.copy(
+            sortOrder = persistentSortOrder,
+            filterCategory = persistentFilterCategory,
+            searchQuery = persistentSearchQuery,
+            isLoading = true
+        ) }
+        // Force immediate load on initialization
+        loadProducts(true)
+    }
+
     fun loadProducts(forceReload: Boolean = false) {
-        // Skip loading if we've already loaded products and not forcing reload
-        if (hasLoadedProducts && !forceReload) return
+        // Don't do anything if we're already loading
+        if (_uiState.value.isLoading && !forceReload) return
 
         _uiState.update { it.copy(isLoading = true, errorMessage = null) }
 
-        // Remove any existing listener first
-        productsListener?.let { productsRef.removeEventListener(it) }
+        // Remove previous listener if exists
+        if (productsListener != null) {
+            productsRef.removeEventListener(productsListener!!)
+        }
 
-        // Create and store the listener
+        // Create new listener
         productsListener = object : ValueEventListener {
             override fun onDataChange(snapshot: DataSnapshot) {
                 val productsList = mutableListOf<Product>()
 
-                for (productSnapshot in snapshot.children) {
-                    val product = productSnapshot.getValue(Product::class.java)
-                    product?.let {
-                        // Ensure ID is set from the key if not already present
-                        if (it.id.isEmpty()) {
-                            it.id = productSnapshot.key ?: ""
+                // Fetch user favorites to determine which products are favorited
+                viewModelScope.launch {
+                    try {
+                        val favoritesSnapshot = database.getReference("favorites")
+                            .child(userId)
+                            .get()
+                            .await()
+
+                        val favoriteIds = favoritesSnapshot.children.mapNotNull { it.key }.toSet()
+
+                        // Process products with favorite status
+                        for (productSnapshot in snapshot.children) {
+                            val product = productSnapshot.getValue(Product::class.java)
+                            product?.let {
+                                if (it.id.isEmpty()) {
+                                    it.id = productSnapshot.key ?: ""
+                                }
+                                // Set favorite status
+                                it.isFavorite = favoriteIds.contains(it.id)
+                                productsList.add(it)
+                            }
                         }
-                        productsList.add(it)
+
+                        _uiState.update {
+                            it.copy(
+                                products = productsList,
+                                isLoading = false
+                            )
+                        }
+                    } catch (e: Exception) {
+                        _uiState.update {
+                            it.copy(
+                                isLoading = false,
+                                errorMessage = "Error loading products: ${e.message}"
+                            )
+                        }
                     }
                 }
-
-                _uiState.update {
-                    it.copy(
-                        products = productsList,
-                        isLoading = false
-                    )
-                }
-
-                // Mark that we've loaded products
-                hasLoadedProducts = true
             }
 
             override fun onCancelled(error: DatabaseError) {
                 _uiState.update {
                     it.copy(
                         isLoading = false,
-                        errorMessage = error.message
+                        errorMessage = "Failed to load products: ${error.message}"
                     )
                 }
             }
         }
 
-        // Add the listener
+        // Attach the listener
         productsRef.addValueEventListener(productsListener!!)
     }
 
-    // Don't forget to clean up in onCleared
+    // Override the onCleared method to clean up listeners
     override fun onCleared() {
         super.onCleared()
-        productsListener?.let { productsRef.removeEventListener(it) }
+        productsListener?.let {
+            productsRef.removeEventListener(it)
+        }
     }
 
     fun setFilterCategory(category: String?) {
+        persistentFilterCategory = category
         _uiState.update { it.copy(filterCategory = category) }
     }
 
     fun setSearchQuery(query: String) {
+        persistentSearchQuery = query
         _uiState.update { it.copy(searchQuery = query) }
     }
 
     fun setSortOrder(sortOrder: SortOrder) {
+        persistentSortOrder = sortOrder
         _uiState.update { it.copy(sortOrder = sortOrder) }
     }
 
     fun resetSort() {
+        persistentSortOrder = SortOrder.NONE
         _uiState.update { it.copy(sortOrder = SortOrder.NONE) }
     }
 
@@ -139,7 +179,7 @@ class ShopViewModel : ViewModel() {
             }
         }
 
-        // Apply search query filter - now only searching by name
+        // Apply search query filter
         if (currentState.searchQuery.isNotEmpty()) {
             val query = currentState.searchQuery.lowercase()
             filteredProducts = filteredProducts.filter {
@@ -165,10 +205,7 @@ class ShopViewModel : ViewModel() {
         val productToUpdate = productsList.find { it.id == productId } ?: return
         val newFavoriteStatus = !productToUpdate.isFavorite
 
-        // Reference to the favorites collection for this user
-        val favoritesRef = database.getReference("favorites").child(userId)
-
-        // Optimistically update UI first for responsive feel
+        // Optimistically update UI first
         val updatedProducts = productsList.map {
             if (it.id == productId) it.copy(isFavorite = newFavoriteStatus) else it
         }
@@ -177,31 +214,27 @@ class ShopViewModel : ViewModel() {
             it.copy(products = updatedProducts)
         }
 
+        // Reference to the favorites collection for this user
+        val favoritesRef = database.getReference("favorites").child(userId)
+
         viewModelScope.launch {
             try {
                 if (newFavoriteStatus) {
-                    // Add complete product info to favorites node
+                    // Add to favorites
                     favoritesRef.child(productId).setValue(productToUpdate.copy(isFavorite = true)).await()
-
-                    // Also update isFavorite status in products node
-                    productsRef.child(productId).child("favorite").setValue(true).await()
                 } else {
-                    // Remove from favorites node
+                    // Remove from favorites
                     favoritesRef.child(productId).removeValue().await()
-
-                    // Update isFavorite status in products node
-                    productsRef.child(productId).child("favorite").setValue(false).await()
                 }
+                // No need to call loadProducts() here - the ValueEventListener will update if needed
             } catch (e: Exception) {
-                // Revert the optimistic update on error
-                val revertedProducts = _uiState.value.products.map {
-                    if (it.id == productId) it.copy(isFavorite = !newFavoriteStatus) else it
-                    }
-
-                    _uiState.update {
-                        it.copy(products = revertedProducts)
-                    }
+                // Revert optimistic update on error
+                _uiState.update {
+                    it.copy(products = it.products.map { product ->
+                        if (product.id == productId) product.copy(isFavorite = !newFavoriteStatus) else product
+                    })
                 }
             }
         }
     }
+}

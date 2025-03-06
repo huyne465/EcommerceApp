@@ -1,4 +1,5 @@
 package com.example.ecommerceapp.presentation.Shop
+
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -35,14 +36,46 @@ fun ShopScreen(
     onProductClick: (String) -> Unit,
     navController: NavHostController,
 ) {
+
+    // Add this LaunchedEffect to force load products when the screen appears
+    LaunchedEffect(Unit) {
+        viewModel.loadProducts(forceReload = true)
+    }
+
     val uiState by viewModel.uiState.collectAsState()
+
+
+    // Track sorting changes to trigger reload
+    LaunchedEffect(uiState.sortOrder) {
+        // Only reload if we have products (avoid double-loading on init)
+        if (uiState.products.isNotEmpty()) {
+            viewModel.loadProducts(forceReload = true)
+        }
+    }
+
+
+    // Track filter category changes
+    LaunchedEffect(uiState.filterCategory) {
+        if (uiState.products.isNotEmpty()) {
+            viewModel.loadProducts(forceReload = true)
+        }
+    }
+
+    // Track search query changes
+    LaunchedEffect(uiState.searchQuery) {
+        if (uiState.searchQuery.length >= 2 && uiState.products.isNotEmpty()) {
+            viewModel.loadProducts(forceReload = true)
+        }
+    }
+
     val filteredProducts = viewModel.getFilteredAndSortedProducts()
     val categories = listOf("T-shirts", "Crop tops", "Sleeveless", "More")
-    var selectedCategory by remember { mutableStateOf<String?>(null) }
-    var showSearchBar by remember { mutableStateOf(false) }
-    var searchQuery by remember { mutableStateOf("") }
-    var showSortOptions by remember { mutableStateOf(false) }
 
+    // Update the selectedCategory based on persistentFilterCategory
+    var selectedCategory by remember { mutableStateOf(uiState.filterCategory) }
+    var showSearchBar by remember { mutableStateOf(false) }
+    var searchQuery by remember { mutableStateOf(uiState.searchQuery) }
+    var showSortOptions by remember { mutableStateOf(false) }
     Scaffold(
         topBar = {
             if (showSearchBar) {
@@ -426,84 +459,86 @@ fun ProductItem(
     onProductClick: () -> Unit,
     onFavoriteClick: () -> Unit,
 ) {
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable(onClick = onProductClick)
-    ) {
-        Row(
+    key(product.id, product.isFavorite) {
+        Card(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(120.dp),
-            horizontalArrangement = Arrangement.Start
+                .clickable(onClick = onProductClick)
         ) {
-            // Product Image
-            AsyncImage(
-                model = product.imageUrl,
-                contentDescription = product.name,
+            Row(
                 modifier = Modifier
-                    .width(120.dp)
-                    .fillMaxHeight()
-                    .background(Color.LightGray),
-                contentScale = ContentScale.Crop
-            )
-
-            // Product Details
-            Column(
-                modifier = Modifier
-                    .fillMaxHeight()
-                    .weight(1f)
-                    .padding(12.dp),
-                verticalArrangement = Arrangement.SpaceBetween
+                    .fillMaxWidth()
+                    .height(120.dp),
+                horizontalArrangement = Arrangement.Start
             ) {
-                Text(
-                    text = product.name,
-                    style = MaterialTheme.typography.titleLarge,
-                    fontWeight = FontWeight.Bold
+                // Product Image
+                AsyncImage(
+                    model = product.imageUrl,
+                    contentDescription = product.name,
+                    modifier = Modifier
+                        .width(120.dp)
+                        .fillMaxHeight()
+                        .background(Color.LightGray),
+                    contentScale = ContentScale.Crop
                 )
 
-                Text(
-                    text = product.brand,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = Color.Gray
-                )
+                // Product Details
+                Column(
+                    modifier = Modifier
+                        .fillMaxHeight()
+                        .weight(1f)
+                        .padding(12.dp),
+                    verticalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Text(
+                        text = product.name,
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Bold
+                    )
 
-                // Star Rating
-                Row {
-                    repeat(5) { index ->
-                        val isFilled = index < product.rating
-                        Icon(
-                            imageVector = if (isFilled) Icons.Default.Star else Icons.Outlined.StarOutline,
-                            contentDescription = null,
-                            tint = if (isFilled) Color(0xFFFFD700) else Color.LightGray,
-                            modifier = Modifier.size(16.dp)
+                    Text(
+                        text = product.brand,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = Color.Gray
+                    )
+
+                    // Star Rating
+                    Row {
+                        repeat(5) { index ->
+                            val isFilled = index < product.rating
+                            Icon(
+                                imageVector = if (isFilled) Icons.Default.Star else Icons.Outlined.StarOutline,
+                                contentDescription = null,
+                                tint = if (isFilled) Color(0xFFFFD700) else Color.LightGray,
+                                modifier = Modifier.size(16.dp)
+                            )
+                        }
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text(
+                            text = "(${product.reviewCount})",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = Color.Gray
                         )
                     }
-                    Spacer(modifier = Modifier.width(4.dp))
+
                     Text(
-                        text = "(${product.reviewCount})",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = Color.Gray
+                        text = "${product.price.toInt()}$",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold
                     )
                 }
 
-                Text(
-                    text = "${product.price.toInt()}$",
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold
-                )
-            }
-
-            // Favorite Button
-            IconButton(
-                onClick = { onFavoriteClick() },
-                modifier = Modifier.align(Alignment.Top)
-            ) {
-                Icon(
-                    imageVector = if (product.isFavorite) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
-                    contentDescription = "Favorite",
-                    tint = if (product.isFavorite) Color.Red else Color.Gray
-                )
+                // Favorite Button
+                IconButton(
+                    onClick = { onFavoriteClick() },
+                    modifier = Modifier.align(Alignment.Top)
+                ) {
+                    Icon(
+                        imageVector = if (product.isFavorite) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
+                        contentDescription = "Favorite",
+                        tint = if (product.isFavorite) Color.Red else Color.Gray
+                    )
+                }
             }
         }
     }
