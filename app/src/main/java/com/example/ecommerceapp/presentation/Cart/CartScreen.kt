@@ -269,7 +269,7 @@ fun CartScreen(
 
                     // Checkout button
                     Button(
-                        onClick = { viewModel.proceedToCheckout() },
+                        onClick = { navController.navigate("order") },
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(56.dp),

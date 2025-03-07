@@ -163,14 +163,6 @@ class CartViewModel : ViewModel() {
         _uiState.update { it.copy(actionMessage = null) }
     }
 
-    fun proceedToCheckout() {
-        // Implement checkout logic here
-        _uiState.update {
-            it.copy(
-                actionMessage = "Proceeding to checkout..."
-            )
-        }
-    }
 }
 
 // Factory for creating the ViewModel if you need parameters

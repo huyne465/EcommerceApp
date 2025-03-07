@@ -19,7 +19,7 @@ import java.util.UUID
 class AddressListViewModel : ViewModel() {
 
     data class Address(
-        val id: String = "",
+        var id: String = "",
         val fullName: String = "",
         val phoneNumber: String = "",
         val address: String = "",

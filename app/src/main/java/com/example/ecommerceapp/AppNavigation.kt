@@ -13,6 +13,7 @@ import com.example.ecommerceapp.presentation.Shop.ProductDetail.ProductDetailScr
 import com.example.ecommerceapp.presentation.Shop.ProductManage.AddProductScreen
 import com.example.ecommerceapp.presentation.Shop.ShopScreen
 import com.example.ecommerceapp.presentation.AuthScreen
+import com.example.ecommerceapp.presentation.Order.OrderScreen
 import com.example.ecommerceapp.presentation.favorite_item.FavoriteScreen
 import com.example.ecommerceapp.presentation.profile.ProfileScreen
 import com.example.ecommerceapp.presentation.profile.UserAddress.AddAddress.AddAddressScreen
@@ -138,6 +139,20 @@ fun AppNavigation(modifier: Modifier = Modifier) {
         composable("address_list") {
             AddressListScreen(
                 navController = navController
+            )
+        }
+
+
+        // Add this inside the NavHost composable
+        composable("order") {
+            OrderScreen(
+                navController = navController,
+                onOrderComplete = {
+                    // Navigate to order confirmation or back to home
+                    navController.navigate("home") {
+                        popUpTo("shop") { inclusive = false }
+                    }
+                }
             )
         }
 
