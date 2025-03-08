@@ -1,5 +1,6 @@
 package com.example.ecommerceapp.presentation.Order
 
+import android.app.Activity
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -27,6 +28,7 @@ import com.example.ecommerceapp.model.CartItem
 import com.example.ecommerceapp.presentation.Cart.formatPrice
 import com.example.ecommerceapp.presentation.Order.OrderViewModel.PaymentMethod
 import androidx.compose.foundation.layout.size
+import androidx.compose.ui.platform.LocalContext
 import com.example.ecommerceapp.presentation.profile.UserAddress.AddressList.AddressListViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -40,6 +42,8 @@ fun OrderScreen(
     val uiState by viewModel.uiState.collectAsState()
     var showOrderConfirmation by remember { mutableStateOf(false) }
     val addressUiState by addressListViewModel.uiState.collectAsState()
+    // Get the local context the proper way
+    val context = LocalContext.current
 
     // Force immediate loading when screen appears
     LaunchedEffect(Unit) {
@@ -65,6 +69,20 @@ fun OrderScreen(
         }
     }
 
+    // Handle ZaloPay payment initiation when orderId exists
+    // and the selected payment method is ZaloPay
+    LaunchedEffect(key1 = uiState.orderId, key2 = uiState.selectedPaymentMethod) {
+        if (uiState.orderId != null &&
+            uiState.selectedPaymentMethod == PaymentMethod.ZALO_PAY &&
+            !uiState.isZaloPayRequested) {
+            // Get activity from context and initiate payment
+            val activity = context as? Activity
+            if (activity != null) {
+                viewModel.initiateZaloPayPayment(activity)
+            }
+        }
+    }
+
     // Show confirmation dialog before placing order
     if (showOrderConfirmation) {
         AlertDialog(
@@ -86,7 +104,6 @@ fun OrderScreen(
                         showOrderConfirmation = false
                     } else {
                         // Handle case where no default address is found
-                        // For example, show an error message
                     }
                 }) {
                     Text("Confirm")

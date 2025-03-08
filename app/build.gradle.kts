@@ -56,6 +56,10 @@ dependencies {
     implementation(libs.firebase.firestore.ktx)
     implementation(libs.androidx.room.ktx)
     implementation(libs.play.services.identity)
+
+
+
+
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
@@ -84,4 +88,27 @@ dependencies {
     // Material components
     implementation ("androidx.compose.material:material:1.5.0")
     implementation ("androidx.compose.material:material-icons-extended:1.5.0")
+
+
+    // ZaloPay SDK - Choose ONE of the following options:
+
+
+    // Additional dependencies for ZaloPay that might be required
+//    implementation("com.squareup.okhttp3:okhttp:4.6.0")
+//    implementation("commons-codec:commons-codec:1.14")
+    //import ZaloPay SDK
+//    implementation(fileTree(mapOf(
+//        "dir" to "D:\\ZaloLib\\DemoZPDK_Android",
+//        "include" to listOf("*.aar", "*.jar"),
+//        "exclude" to listOf("libs/*.jar")
+//    )))
+//    implementation(files("D:\\ZaloLib2\\DemoZPDK_Flutter\\DemoZPDK_Flutter\\ZPDK-Android\\zpdk-release-28052021.aar"))
+
+    implementation(fileTree(mapOf(
+        "dir" to "D:\\ZaloLib2",
+        "include" to listOf("*.aar", "*.jar"),
+        "exclude" to listOf("libs/*.jar")
+    )))
+    // Replace with path to local AAR file
+    implementation ("org.jetbrains.kotlin:kotlin-stdlib-jdk7:$2.0.0")
 }
