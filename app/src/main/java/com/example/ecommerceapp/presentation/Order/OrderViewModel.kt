@@ -4,8 +4,8 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+
 import com.example.ecommerceapp.model.CartItem
-import com.example.ecommerceapp.model.Order
 import com.example.ecommerceapp.presentation.profile.UserAddress.AddressList.AddressListViewModel
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.FirebaseDatabase
@@ -44,6 +44,7 @@ class OrderViewModel() : ViewModel() {
         val orderPlaced: Boolean = false,
         val orderId: String? = null,
         val isProcessing: Boolean = false,
+        val shippingAddress: AddressListViewModel.Address? = null
     )
 
     private val _uiState = MutableStateFlow(OrderUiState())
@@ -131,9 +132,23 @@ class OrderViewModel() : ViewModel() {
     }
 
 
-    fun placeOrder() {
-        val currentState = _uiState.value
+    private suspend fun getAddressById(addressId: String): AddressListViewModel.Address? {
+        return try {
+            val addressSnapshot = database.getReference("users").child(userId).child("addresses").child(addressId).get().await()
+            if (addressSnapshot.exists()) {
+                addressSnapshot.getValue(AddressListViewModel.Address::class.java)
+            } else {
+                null
+            }
+        } catch (e: Exception) {
+            println("DEBUG: Failed to load address: ${e.message}")
+            null
+        }
+    }
 
+
+    fun placeOrder(addressId: String) {
+        val currentState = _uiState.value
 
         if (currentState.cartItems.isEmpty()) {
             _uiState.update {
@@ -146,12 +161,24 @@ class OrderViewModel() : ViewModel() {
 
         viewModelScope.launch {
             try {
+                // Retrieve the address
+                val address = getAddressById(addressId)
+                if (address == null) {
+                    _uiState.update {
+                        it.copy(
+                            isLoading = false,
+                            isProcessing = false,
+                            actionMessage = "Failed to retrieve address"
+                        )
+                    }
+                    return@launch
+                }
+
                 // Create new order
                 val orderId = UUID.randomUUID().toString()
 
                 // Create order data as a Map
                 val orderData = mapOf(
-                    "id" to orderId,
                     "userId" to userId,
                     "items" to currentState.cartItems.map { item ->
                         mapOf(
@@ -169,6 +196,15 @@ class OrderViewModel() : ViewModel() {
                     "total" to currentState.total,
                     "paymentMethod" to currentState.selectedPaymentMethod.name,
                     "status" to "PENDING",
+                    "shippingAddress" to mapOf(
+                        "fullName" to address.fullName,
+                        "phoneNumber" to address.phoneNumber,
+                        "address" to address.address,
+                        "city" to address.city,
+                        "state" to address.state,
+                        "zipCode" to address.zipCode,
+                        "isDefault" to address.isDefault
+                    ),
                     "timestamp" to Date().time
                 )
 
@@ -204,7 +240,6 @@ class OrderViewModel() : ViewModel() {
             }
         }
     }
-
     fun clearActionMessage() {
         _uiState.update { it.copy(actionMessage = null) }
     }

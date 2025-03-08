@@ -53,7 +53,7 @@ fun OrderScreen(
     LaunchedEffect(addressUiState.addresses) {
     }
 
-    // Watch for changes in cart items to recalculate totals
+
     LaunchedEffect(uiState.cartItems) {
         viewModel.recalculateOrderTotals()
     }
@@ -80,8 +80,14 @@ fun OrderScreen(
             },
             confirmButton = {
                 Button(onClick = {
-                    viewModel.placeOrder()
-                    showOrderConfirmation = false
+                    val defaultAddress = addressUiState.addresses.find { it.isDefault }
+                    if (defaultAddress != null) {
+                        viewModel.placeOrder(defaultAddress.id)
+                        showOrderConfirmation = false
+                    } else {
+                        // Handle case where no default address is found
+                        // For example, show an error message
+                    }
                 }) {
                     Text("Confirm")
                 }

@@ -81,7 +81,6 @@ class AddAddressViewModel : ViewModel() {
                     "state" to uiState.value.state,
                     "zipCode" to uiState.value.zipCode,
                     "isDefault" to uiState.value.isDefault,
-                    "id" to UUID.randomUUID().toString()
                 )
 
                 // Reference to user's addresses
