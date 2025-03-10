@@ -15,6 +15,8 @@ import com.example.ecommerceapp.presentation.Shop.ShopScreen
 import com.example.ecommerceapp.presentation.AuthScreen
 import com.example.ecommerceapp.presentation.Order.OrderScreen
 import com.example.ecommerceapp.presentation.favorite_item.FavoriteScreen
+import com.example.ecommerceapp.presentation.profile.OrderHistory.OrderDetailScreen
+import com.example.ecommerceapp.presentation.profile.OrderHistory.OrderHistoryScreen
 import com.example.ecommerceapp.presentation.profile.ProfileScreen
 import com.example.ecommerceapp.presentation.profile.UserAddress.AddAddress.AddAddressScreen
 import com.example.ecommerceapp.presentation.profile.UserAddress.AddressList.AddressListScreen
@@ -154,6 +156,14 @@ fun AppNavigation(modifier: Modifier = Modifier) {
                     }
                 }
             )
+        }
+
+        composable("order_history") {
+            OrderHistoryScreen(navController)
+        }
+        composable("order_detail/{orderId}") { backStackEntry ->
+            val orderId = backStackEntry.arguments?.getString("orderId") ?: return@composable
+            OrderDetailScreen(navController, orderId)
         }
 
     }

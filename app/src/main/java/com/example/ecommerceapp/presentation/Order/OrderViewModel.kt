@@ -318,7 +318,6 @@ class OrderViewModel : ViewModel() {
 
                 // Create order data as a Map
                 val orderData = mapOf(
-                    "userId" to userId,
                     "items" to currentState.cartItems.map { item ->
                         mapOf(
                             "productId" to item.productId,

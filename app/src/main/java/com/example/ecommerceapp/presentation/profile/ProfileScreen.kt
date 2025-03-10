@@ -300,7 +300,7 @@ fun ProfileScreen(
             ProfileMenuItem(
                 title = "My orders",
                 subtitle = "Already have ${uiState.orderCount} orders",
-                onClick = { /* Navigate to orders */ }
+                onClick = { navController.navigate("order_history") }
             )
 
             ProfileMenuItem(

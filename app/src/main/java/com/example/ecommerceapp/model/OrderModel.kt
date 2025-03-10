@@ -1,23 +1,39 @@
 package com.example.ecommerceapp.model
 
-import com.example.ecommerceapp.presentation.Order.OrderViewModel
-import com.example.ecommerceapp.presentation.profile.UserAddress.AddressList.AddressListViewModel
-
-
-data class OrderUiState(
-    val cartItems: List<CartItem> = emptyList(),
-    val isLoading: Boolean = true,
-    val errorMessage: String? = null,
+data class Order(
+    val orderId: String,
+    val items: List<OrderItem>,
+    val paymentDetails: PaymentDetails,
+    val shippingAddress: ShippingAddress,
+    val status: String,
+    val shipping: Double,
     val subtotal: Double = 0.0,
     val tax: Double = 0.0,
-    val shipping: Double = 0.0,
-    val total: Double = 0.0,
-    val selectedPaymentMethod: OrderViewModel.PaymentMethod = OrderViewModel.PaymentMethod.COD,
-    val actionMessage: String? = null,
-    val orderPlaced: Boolean = false,
-    val orderId: String? = null,
-    val isProcessing: Boolean = false,
-    val shippingAddress: AddressListViewModel.Address? = null,
-    val zaloPayUrl: String? = null,
-    val zaloPayOrderId: String? = null
+    val total: Double,
+    val timestamp: Long = 0
+)
+
+data class OrderItem(
+    val brand: String,
+    val imageUrl: String,
+    val name: String,
+    val price: Double,
+    val productId: String,
+    val quantity: Int
+)
+
+data class PaymentDetails(
+    val paymentTime: Long,
+    val transactionId: String,
+    val paymentMethod: String
+)
+
+data class ShippingAddress(
+    val address: String,
+    val city: String = "",
+    val state: String = "",
+    val zipCode: String = "",
+    val fullName: String = "",
+    val phoneNumber: String = "",
+    val isDefault: Boolean = false
 )
