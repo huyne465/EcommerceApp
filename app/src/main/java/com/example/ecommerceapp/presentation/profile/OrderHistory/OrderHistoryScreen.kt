@@ -1,8 +1,7 @@
 package com.example.ecommerceapp.presentation.profile.OrderHistory
 
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
+import android.os.Build
+import androidx.annotation.RequiresApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -11,7 +10,13 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowForward
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ArrowForward
+import androidx.compose.material.icons.filled.CalendarMonth
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.DateRange
+import androidx.compose.material.icons.filled.FilterAlt
+import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.Receipt
 import androidx.compose.material.icons.filled.ShoppingBag
 import androidx.compose.material3.*
@@ -28,59 +33,267 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import com.example.ecommerceapp.model.Order
 import java.time.Instant
+import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
-import java.util.*
 
+@RequiresApi(Build.VERSION_CODES.O)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun OrderHistoryScreen(
     navController: NavHostController,
-    viewModel: OrderHistoryViewModel = viewModel()
+    viewModel: OrderHistoryViewModel = viewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    var showDateRangePicker by remember { mutableStateOf(false) }
+
+    // Date range state
+    var startDate by remember { mutableStateOf<LocalDate?>(null) }
+    var endDate by remember { mutableStateOf<LocalDate?>(null) }
+
+    // Filtered orders
+    val filteredOrders = remember(uiState.orders, startDate, endDate) {
+        if (startDate == null && endDate == null) {
+            uiState.orders
+        } else {
+            uiState.orders.filter { order ->
+                val orderDate = Instant.ofEpochMilli(order.timestamp)
+                    .atZone(ZoneId.systemDefault())
+                    .toLocalDate()
+
+                val afterStartDate = startDate?.let { orderDate.isAfter(it) || orderDate.isEqual(it) } ?: true
+                val beforeEndDate = endDate?.let { orderDate.isBefore(it) || orderDate.isEqual(it) } ?: true
+
+                afterStartDate && beforeEndDate
+            }
+        }
+    }
+
+    // Active date range indicator
+    val dateRangeText = when {
+        startDate != null && endDate != null -> {
+            "${startDate!!.format(DateTimeFormatter.ofPattern("MMM dd, yyyy"))} - ${endDate!!.format(DateTimeFormatter.ofPattern("MMM dd, yyyy"))}"
+        }
+        startDate != null -> {
+            "From ${startDate!!.format(DateTimeFormatter.ofPattern("MMM dd, yyyy"))}"
+        }
+        endDate != null -> {
+            "Until ${endDate!!.format(DateTimeFormatter.ofPattern("MMM dd, yyyy"))}"
+        }
+        else -> "All Orders"
+    }
 
     Scaffold(
         topBar = {
-            LargeTopAppBar(
+            CenterAlignedTopAppBar(
                 title = { Text("My Orders") },
-                colors = TopAppBarDefaults.largeTopAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.primary,
-                    titleContentColor = MaterialTheme.colorScheme.onPrimary
+                navigationIcon = {
+                    IconButton(onClick = { navController.navigateUp() }) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = "Navigate back"
+                        )
+                    }
+                },
+                actions = {
+                    IconButton(onClick = { showDateRangePicker = true }) {
+                        Icon(
+                            imageVector = Icons.Default.DateRange,
+                            contentDescription = "Filter by date"
+                        )
+                    }
+                },
+                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.surface,
+                    titleContentColor = MaterialTheme.colorScheme.onSurface
                 )
             )
         }
     ) { padding ->
-        Box(
+        Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
                 .background(MaterialTheme.colorScheme.background)
         ) {
-            AnimatedVisibility(
-                visible = uiState.errorMessage != null,
-                enter = fadeIn(),
-                exit = fadeOut()
-            ) {
-                ErrorState(message = uiState.errorMessage ?: "")
+            // Date range filter chip
+            if (startDate != null || endDate != null) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp, vertical = 8.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    FilterChip(
+                        selected = true,
+                        onClick = { showDateRangePicker = true },
+                        label = { Text(dateRangeText) },
+                        leadingIcon = {
+                            Icon(
+                                Icons.Default.CalendarMonth,
+                                contentDescription = null,
+                                modifier = Modifier.size(18.dp)
+                            )
+                        },
+                        trailingIcon = {
+                            Icon(
+                                Icons.Default.KeyboardArrowDown,
+                                contentDescription = "Show date picker"
+                            )
+                        },
+                        colors = FilterChipDefaults.filterChipColors(
+                            selectedContainerColor = MaterialTheme.colorScheme.primaryContainer,
+                            selectedLabelColor = MaterialTheme.colorScheme.onPrimaryContainer
+                        )
+                    )
+
+                    Spacer(modifier = Modifier.weight(1f))
+
+                    // Clear filter button
+                    IconButton(
+                        onClick = {
+                            startDate = null
+                            endDate = null
+                        }
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Close,
+                            contentDescription = "Clear date filter",
+                            tint = MaterialTheme.colorScheme.primary
+                        )
+                    }
+                }
+
+                HorizontalDivider(Modifier.padding(horizontal = 16.dp))
             }
 
-            AnimatedVisibility(
-                visible = uiState.orders.isEmpty() && uiState.errorMessage == null,
-                enter = fadeIn(),
-                exit = fadeOut()
-            ) {
-                EmptyOrdersState(navController)
+            Box(modifier = Modifier.fillMaxSize()) {
+                // Fixed AnimatedVisibility calls by using them directly rather than in a Box scope
+                if (uiState.errorMessage != null) {
+                    ErrorState(message = uiState.errorMessage ?: "")
+                } else if (filteredOrders.isEmpty()) {
+                    if (uiState.orders.isEmpty()) {
+                        EmptyOrdersState(navController)
+                    } else {
+                        // No orders in selected date range
+                        NoFilteredOrdersState(
+                            onResetFilters = {
+                                startDate = null
+                                endDate = null
+                            }
+                        )
+                    }
+                } else {
+                    OrdersList(filteredOrders, navController)
+                }
             }
+        }
+    }
 
-            AnimatedVisibility(
-                visible = uiState.orders.isNotEmpty(),
-                enter = fadeIn(),
-                exit = fadeOut()
-            ) {
-                OrdersList(uiState.orders, navController)
+    // Date Range Picker Dialog
+    if (showDateRangePicker) {
+        val datePickerState = rememberDateRangePickerState(
+            initialSelectedStartDateMillis = startDate?.atStartOfDay(ZoneId.systemDefault())?.toInstant()?.toEpochMilli(),
+            initialSelectedEndDateMillis = endDate?.atStartOfDay(ZoneId.systemDefault())?.toInstant()?.toEpochMilli(),
+        )
+
+        DatePickerDialog(
+            onDismissRequest = { showDateRangePicker = false },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        datePickerState.selectedStartDateMillis?.let { startMillis ->
+                            startDate = Instant.ofEpochMilli(startMillis)
+                                .atZone(ZoneId.systemDefault())
+                                .toLocalDate()
+                        } ?: run { startDate = null }
+
+                        datePickerState.selectedEndDateMillis?.let { endMillis ->
+                            endDate = Instant.ofEpochMilli(endMillis)
+                                .atZone(ZoneId.systemDefault())
+                                .toLocalDate()
+                        } ?: run { endDate = null }
+
+                        showDateRangePicker = false
+                    }
+                ) {
+                    Text("OK")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDateRangePicker = false }) {
+                    Text("Cancel")
+                }
             }
+        ) {
+            DateRangePicker(
+                state = datePickerState,
+                title = { Text("Filter Orders by Date") },
+                headline = {
+                    Text(
+                        "Select start and end dates",
+                        style = MaterialTheme.typography.labelMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                },
+                showModeToggle = false
+            )
+        }
+    }
+}
+
+@Composable
+fun NoFilteredOrdersState(onResetFilters: () -> Unit) {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(24.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
+    ) {
+        Box(
+            modifier = Modifier
+                .size(120.dp)
+                .clip(CircleShape)
+                .background(MaterialTheme.colorScheme.tertiaryContainer),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                imageVector = Icons.Default.FilterAlt,
+                contentDescription = null,
+                modifier = Modifier.size(64.dp),
+                tint = MaterialTheme.colorScheme.tertiary
+            )
+        }
+
+        Spacer(modifier = Modifier.height(24.dp))
+
+        Text(
+            "No Orders Found",
+            style = MaterialTheme.typography.headlineSmall,
+            fontWeight = FontWeight.Bold,
+            color = MaterialTheme.colorScheme.onBackground
+        )
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        Text(
+            "No orders were found for the selected date range.",
+            style = MaterialTheme.typography.bodyLarge,
+            textAlign = TextAlign.Center,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+
+        Spacer(modifier = Modifier.height(24.dp))
+
+        Button(
+            onClick = onResetFilters,
+            colors = ButtonDefaults.buttonColors(
+                containerColor = MaterialTheme.colorScheme.tertiary
+            )
+        ) {
+            Text("Reset Filters")
         }
     }
 }
@@ -191,6 +404,7 @@ fun ErrorState(message: String) {
     }
 }
 
+@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun OrdersList(orders: List<Order>, navController: NavHostController) {
     LazyColumn(
@@ -206,6 +420,7 @@ fun OrdersList(orders: List<Order>, navController: NavHostController) {
     }
 }
 
+@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun OrderCard(order: Order, onClick: () -> Unit) {
     Card(
@@ -312,7 +527,7 @@ fun OrderCard(order: Order, onClick: () -> Unit) {
                         )
                         Spacer(modifier = Modifier.width(4.dp))
                         Icon(
-                            Icons.Default.ArrowForward,
+                            Icons.AutoMirrored.Filled.ArrowForward,
                             contentDescription = null,
                             modifier = Modifier.size(18.dp)
                         )
@@ -348,6 +563,7 @@ fun StatusBadge(status: String) {
 }
 
 // Using the modern date formatting approach
+@RequiresApi(Build.VERSION_CODES.O)
 fun formatTimestampToPattern(timestamp: Long): String {
     if (timestamp == 0L) return "N/A"
 

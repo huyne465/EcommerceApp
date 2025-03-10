@@ -79,7 +79,9 @@ class ProfileViewModel : ViewModel() {
         userRef.addValueEventListener(object : ValueEventListener {
             override fun onDataChange(snapshot: DataSnapshot) {
                 try {
+
                     val currentUser = auth.currentUser ?: return
+
                     // Get user name from database first, fallback to Auth display name
                     val userName = snapshot.child("name").getValue(String::class.java)
                         ?: currentUser.displayName
@@ -89,7 +91,15 @@ class ProfileViewModel : ViewModel() {
                     val profileImageUrl = snapshot.child("profileImageUrl").getValue(String::class.java) ?: ""
 
                     // Orders count
-                    val ordersCount = snapshot.child("orders").childrenCount.toInt()
+                    val ordersRef = database.getReference("orders").child(userId)
+                    ordersRef.get().addOnSuccessListener { ordersSnapshot ->
+                        val ordersCount = ordersSnapshot.childrenCount.toInt()
+                        _uiState.update {
+                            it.copy(
+                                orderCount = ordersCount
+                            )
+                        }
+                    }
 
                     // Addresses count
                     val addressesCount = snapshot.child("addresses").childrenCount.toInt()
@@ -105,7 +115,6 @@ class ProfileViewModel : ViewModel() {
                         it.copy(
                             name = userName,
                             profileImageUrl = profileImageUrl,
-                            orderCount = ordersCount,
                             addressCount = addressesCount,
                             lastFourDigits = lastFourDigits,
                             reviewsCount = reviewsCount,
