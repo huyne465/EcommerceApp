@@ -16,11 +16,13 @@ import com.example.ecommerceapp.presentation.Shop.ProductManage.AddProductScreen
 import com.example.ecommerceapp.presentation.Shop.ShopScreen
 import com.example.ecommerceapp.presentation.AuthScreen
 import com.example.ecommerceapp.presentation.Order.OrderScreen
+import com.example.ecommerceapp.presentation.Repo.UserPreferencesRepository
 import com.example.ecommerceapp.presentation.favorite_item.FavoriteScreen
 import com.example.ecommerceapp.presentation.profile.OrderHistory.OrderDetailScreen
 import com.example.ecommerceapp.presentation.profile.OrderHistory.OrderHistoryScreen
 import com.example.ecommerceapp.presentation.profile.ProfileScreen
 import com.example.ecommerceapp.presentation.profile.Setting.SettingsScreen
+import com.example.ecommerceapp.presentation.profile.Setting.SettingsViewModel
 import com.example.ecommerceapp.presentation.profile.Setting.changePassword.ChangePasswordScreen
 import com.example.ecommerceapp.presentation.profile.UserAddress.AddAddress.AddAddressScreen
 import com.example.ecommerceapp.presentation.profile.UserAddress.AddressList.AddressListScreen
@@ -33,7 +35,10 @@ import homeScreen
 
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
-fun AppNavigation(modifier: Modifier = Modifier) {
+fun AppNavigation(
+    modifier: Modifier = Modifier,
+    userPreferencesRepository: UserPreferencesRepository
+) {
     val navController = rememberNavController()
     val signInViewModel = viewModel(modelClass = SignInViewModel::class.java)
     val signUpViewModel = viewModel(modelClass = SignUpViewModel::class.java)
@@ -171,8 +176,14 @@ fun AppNavigation(modifier: Modifier = Modifier) {
             OrderDetailScreen(navController, orderId)
         }
 
-        composable("settings") { SettingsScreen(navController) }
         composable("change_password") { ChangePasswordScreen(navController) }
+
+        composable("settings") {
+            val viewModel = viewModel<SettingsViewModel>(
+                factory = SettingsViewModel.Factory(userPreferencesRepository)
+            )
+            SettingsScreen(navController, viewModel)
+        }
 
 
     }

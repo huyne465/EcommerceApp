@@ -56,6 +56,7 @@ dependencies {
     implementation(libs.firebase.firestore.ktx)
     implementation(libs.androidx.room.ktx)
     implementation(libs.play.services.identity)
+    implementation(libs.androidx.datastore.core.android)
 
 
 
@@ -111,4 +112,7 @@ dependencies {
     )))
     // Replace with path to local AAR file
     implementation ("org.jetbrains.kotlin:kotlin-stdlib-jdk7:$2.0.0")
+
+    // DataStore Preferences
+    implementation ("androidx.datastore:datastore-preferences:1.0.0")
 }
