@@ -31,6 +31,9 @@
                 <category android:name="android.intent.category.BROWSABLE"/>
                 <data android:scheme="demozpdk" android:host="app"/>
             </intent-filter>
+            <meta-data
+                android:name="com.google.android.gms.wallet.api.enabled"
+                android:value="true" />
             <!-- Update this intent filter to match your callback URL -->
 <!--            <intent-filter>-->
 <!--                <action android:name="android.intent.action.VIEW"/>-->

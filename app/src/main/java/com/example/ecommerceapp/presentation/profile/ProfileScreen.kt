@@ -11,7 +11,9 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
@@ -297,47 +299,54 @@ fun ProfileScreen(
             Spacer(modifier = Modifier.height(8.dp))
 
             // Profile menu items
-            ProfileMenuItem(
-                title = "My orders",
-                subtitle = "Already have ${uiState.orderCount} orders",
-                onClick = { navController.navigate("order_history") }
-            )
+            Column(
+                modifier = Modifier
+                    .weight(1f)
+                    .verticalScroll(rememberScrollState())
+            ) {
+                ProfileMenuItem(
+                    title = "My orders",
+                    subtitle = "Already have ${uiState.orderCount} orders",
+                    onClick = { navController.navigate("order_history") }
+                )
 
-            ProfileMenuItem(
-                title = "Shipping addresses",
-                subtitle = "${uiState.addressCount} addresses",
-                onClick = {
-                    // Navigate to address listing screen
-                    navController.navigate("address_list")
-                }
-            )
+                ProfileMenuItem(
+                    title = "Shipping addresses",
+                    subtitle = "${uiState.addressCount} addresses",
+                    onClick = {
+                        // Navigate to address listing screen
+                        navController.navigate("address_list")
+                    }
+                )
 
-            ProfileMenuItem(
-                title = "Payment methods",
-                subtitle = "Visa *${uiState.lastFourDigits}",
-                onClick = { /* Navigate to payment methods */ }
-            )
+                ProfileMenuItem(
+                    title = "Payment methods",
+                    subtitle = "Visa *${uiState.lastFourDigits}",
+                    onClick = { /* Navigate to payment methods */ }
+                )
 
-            ProfileMenuItem(
-                title = "Promocodes",
-                subtitle = "You have special promocodes",
-                onClick = { /* Navigate to promocodes */ }
-            )
+                ProfileMenuItem(
+                    title = "Promocodes",
+                    subtitle = "You have special promocodes",
+                    onClick = { /* Navigate to promocodes */ }
+                )
 
-            ProfileMenuItem(
-                title = "My reviews",
-                subtitle = "Reviews for ${uiState.reviewsCount} items",
-                onClick = { /* Navigate to reviews */ }
-            )
+                ProfileMenuItem(
+                    title = "My reviews",
+                    subtitle = "Reviews for ${uiState.reviewsCount} items",
+                    onClick = { /* Navigate to reviews */ }
+                )
 
-            ProfileMenuItem(
-                title = "Settings",
-                subtitle = "Notifications, password",
-                onClick = { navController.navigate("settings") }
-            )
+                ProfileMenuItem(
+                    title = "Settings",
+                    subtitle = "Notifications, password",
+                    onClick = { navController.navigate("settings") }
+                )
+            }
 
-            Spacer(modifier = Modifier.height(40.dp))
-            Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+            Spacer(modifier = Modifier.height(30.dp))
+
+            Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center, ) {
                 Button(
                     onClick = {
                         // Sign out
@@ -346,11 +355,13 @@ fun ProfileScreen(
                     },
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(50.dp)
+                        .height(45.dp)
                 ) {
-                    Text(text = "Sign out", fontSize = 16.sp)
+                    Text(text = "Sign out", fontSize = 14.sp)
                 }
             }
+
+            Spacer(modifier = Modifier.height(30.dp))
         }
     }
 }

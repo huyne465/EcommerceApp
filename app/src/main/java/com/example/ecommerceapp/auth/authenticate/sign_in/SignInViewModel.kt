@@ -1,4 +1,4 @@
-package com.example.ecommerceapp.presentation.sign_in
+package com.example.ecommerceapp.auth.authenticate.sign_in
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope

@@ -57,6 +57,7 @@ dependencies {
     implementation(libs.androidx.room.ktx)
     implementation(libs.play.services.identity)
     implementation(libs.androidx.datastore.core.android)
+    implementation(libs.play.services.wallet)
 
 
 

@@ -1,4 +1,4 @@
-package com.example.ecommerceapp
+package com.example.ecommerceapp.core
 
 import android.os.Build
 import androidx.annotation.RequiresApi
@@ -27,10 +27,10 @@ import com.example.ecommerceapp.presentation.profile.Setting.changePassword.Chan
 import com.example.ecommerceapp.presentation.profile.UserAddress.AddAddress.AddAddressScreen
 import com.example.ecommerceapp.presentation.profile.UserAddress.AddressList.AddressListScreen
 import com.example.ecommerceapp.presentation.profile.UserAddress.EditAddress.EditAddressScreen
-import com.example.ecommerceapp.presentation.sign_in.SignInScreen
-import com.example.ecommerceapp.presentation.sign_up.SignUpScreen
-import com.example.ecommerceapp.presentation.sign_in.SignInViewModel
-import com.example.ecommerceapp.presentation.sign_up.SignUpViewModel
+import com.example.ecommerceapp.auth.authenticate.sign_in.SignInScreen
+import com.example.ecommerceapp.auth.authenticate.sign_up.SignUpScreen
+import com.example.ecommerceapp.auth.authenticate.sign_in.SignInViewModel
+import com.example.ecommerceapp.auth.authenticate.sign_up.SignUpViewModel
 import homeScreen
 
 @RequiresApi(Build.VERSION_CODES.O)
