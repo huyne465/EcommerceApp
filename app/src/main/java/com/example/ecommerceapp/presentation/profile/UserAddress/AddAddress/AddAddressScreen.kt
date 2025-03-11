@@ -157,16 +157,7 @@ fun AddAddressScreen(
                 // Save button
                 Button(
                     onClick = {
-                        if (viewModel.validateForm()) {
-                            viewModel.saveAddress()
-                        } else {
-                            scope.launch {
-                                // Show error for invalid form
-                                viewModel.uiState.value.copy(
-                                    errorMessage = "Please fill all required fields"
-                                )
-                            }
-                        }
+                        viewModel.saveAddress()
                     },
                     modifier = Modifier
                         .fillMaxWidth()

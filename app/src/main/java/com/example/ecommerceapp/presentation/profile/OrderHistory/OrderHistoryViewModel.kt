@@ -68,11 +68,11 @@ class OrderHistoryViewModel : ViewModel() {
             val items = mutableListOf<OrderItem>()
             val itemsSnapshot = snapshot.child("items")
             for (itemSnapshot in itemsSnapshot.children) {
-                val brand = itemSnapshot.child("brand").getValue(String::class.java) ?: ""
-                val imageUrl = itemSnapshot.child("imageUrl").getValue(String::class.java) ?: ""
+                val brand = itemSnapshot.child("brand").getValue(String::class.java) ?: "N/A"
+                val imageUrl = itemSnapshot.child("imageUrl").getValue(String::class.java) ?: "N/A"
                 val name = itemSnapshot.child("name").getValue(String::class.java) ?: ""
                 val price = itemSnapshot.child("price").getValue(Double::class.java) ?: 0.0
-                val productId = itemSnapshot.child("productId").getValue(String::class.java) ?: ""
+                val productId = itemSnapshot.child("productId").getValue(String::class.java) ?: "N/A"
                 val quantity = itemSnapshot.child("quantity").getValue(Int::class.java) ?: 0
 
                 items.add(OrderItem(brand, imageUrl, name, price, productId, quantity))
@@ -88,7 +88,7 @@ class OrderHistoryViewModel : ViewModel() {
                 val transactionId = paymentDetailsSnapshot.child("transactionId").getValue(String::class.java) ?: ""
                 // Try to get payment method from different locations since OrderViewModel stores it differently
                 val paymentMethod = paymentDetailsSnapshot.child("paymentMethod").getValue(String::class.java)
-                    ?: snapshot.child("paymentMethod").getValue(String::class.java) ?: ""
+                    ?: snapshot.child("paymentMethod").getValue(String::class.java) ?: "N/A"
                 PaymentDetails(paymentTime, transactionId, paymentMethod)
             } else {
                 // Fall back to getting just the payment method from the root node
@@ -99,9 +99,9 @@ class OrderHistoryViewModel : ViewModel() {
             // Handle shipping address more flexibly
             val shippingAddressSnapshot = snapshot.child("shippingAddress")
             val shippingAddress = if (shippingAddressSnapshot.exists()) {
-                val address = shippingAddressSnapshot.child("address").getValue(String::class.java) ?: ""
-                val city = shippingAddressSnapshot.child("city").getValue(String::class.java) ?: ""
-                val fullName = shippingAddressSnapshot.child("fullName").getValue(String::class.java) ?: ""
+                val address = shippingAddressSnapshot.child("address").getValue(String::class.java) ?: "N/A"
+                val city = shippingAddressSnapshot.child("city").getValue(String::class.java) ?: "N/A"
+                val fullName = shippingAddressSnapshot.child("fullName").getValue(String::class.java) ?: "N/A"
                 // Create a more complete shipping address object
                 ShippingAddress(
                     address = address,

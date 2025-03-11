@@ -333,7 +333,7 @@ fun ProfileScreen(
             ProfileMenuItem(
                 title = "Settings",
                 subtitle = "Notifications, password",
-                onClick = { /* Navigate to settings */ }
+                onClick = { navController.navigate("settings") }
             )
 
             Spacer(modifier = Modifier.height(40.dp))

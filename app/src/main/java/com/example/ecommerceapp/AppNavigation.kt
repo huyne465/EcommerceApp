@@ -1,5 +1,7 @@
 package com.example.ecommerceapp
 
+import android.os.Build
+import androidx.annotation.RequiresApi
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -18,6 +20,8 @@ import com.example.ecommerceapp.presentation.favorite_item.FavoriteScreen
 import com.example.ecommerceapp.presentation.profile.OrderHistory.OrderDetailScreen
 import com.example.ecommerceapp.presentation.profile.OrderHistory.OrderHistoryScreen
 import com.example.ecommerceapp.presentation.profile.ProfileScreen
+import com.example.ecommerceapp.presentation.profile.Setting.SettingsScreen
+import com.example.ecommerceapp.presentation.profile.Setting.changePassword.ChangePasswordScreen
 import com.example.ecommerceapp.presentation.profile.UserAddress.AddAddress.AddAddressScreen
 import com.example.ecommerceapp.presentation.profile.UserAddress.AddressList.AddressListScreen
 import com.example.ecommerceapp.presentation.profile.UserAddress.EditAddress.EditAddressScreen
@@ -27,6 +31,7 @@ import com.example.ecommerceapp.presentation.sign_in.SignInViewModel
 import com.example.ecommerceapp.presentation.sign_up.SignUpViewModel
 import homeScreen
 
+@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun AppNavigation(modifier: Modifier = Modifier) {
     val navController = rememberNavController()
@@ -165,6 +170,10 @@ fun AppNavigation(modifier: Modifier = Modifier) {
             val orderId = backStackEntry.arguments?.getString("orderId") ?: return@composable
             OrderDetailScreen(navController, orderId)
         }
+
+        composable("settings") { SettingsScreen(navController) }
+        composable("change_password") { ChangePasswordScreen(navController) }
+
 
     }
 }
