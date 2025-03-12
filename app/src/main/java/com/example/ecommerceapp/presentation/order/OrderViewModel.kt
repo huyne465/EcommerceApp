@@ -1,4 +1,4 @@
-package com.example.ecommerceapp.presentation.Order
+package com.example.ecommerceapp.presentation.order
 
 import android.app.Activity
 import androidx.lifecycle.ViewModel

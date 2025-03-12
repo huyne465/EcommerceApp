@@ -43,7 +43,6 @@ fun SignInScreen(
 
 
     val composition by rememberLottieComposition(LottieCompositionSpec.RawRes(R.raw.welcome)) //get image
-
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
     // Effect để xử lý điều hướng khi Login thành công
@@ -115,6 +114,18 @@ fun SignInScreen(
             singleLine = true
         )
 
+        // Forgot password button - add this
+        TextButton(
+            onClick = { navController.navigate("reset_password/${uiState.email}") },
+            modifier = Modifier.align(Alignment.End)
+        ) {
+            Text(
+                text = "Forgot Password?",
+                color = Color(0xFF2196F3),
+                fontSize = 14.sp
+            )
+        }
+
         if (!uiState.errorMessage.isNullOrEmpty()) {
             Text(
                 text = uiState.errorMessage!!,
@@ -150,8 +161,3 @@ fun SignInScreen(
     }
 }
 
-@Preview
-@Composable
-private fun preview() {
-
-}

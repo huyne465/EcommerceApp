@@ -1,4 +1,4 @@
-package com.example.ecommerceapp.presentation.Shop.ProductManage
+package com.example.ecommerceapp.presentation.shop.productManage
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -10,7 +10,6 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
-import java.util.UUID
 
 class AddProductViewModel : ViewModel() {
 

@@ -1,6 +1,5 @@
 package com.example.ecommerceapp.presentation.profile
 
-import android.graphics.Bitmap
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.google.firebase.auth.FirebaseAuth
@@ -108,8 +107,32 @@ class ProfileViewModel : ViewModel() {
                     val paymentMethod = snapshot.child("paymentMethods").children.firstOrNull()
                     val lastFourDigits = paymentMethod?.child("lastFourDigits")?.getValue(String::class.java) ?: "34"
 
-                    // Reviews count
-                    val reviewsCount = snapshot.child("reviews").childrenCount.toInt()
+                    // Initialize reviews count
+                    var reviewsCount = 0
+
+                    // Count user reviews from comments node
+                    val commentsRef = database.getReference("comments")
+                    commentsRef.get().addOnSuccessListener { commentsSnapshot ->
+                        var reviewCount = 0
+
+                        // Loop through all product comments
+                        for (productSnapshot in commentsSnapshot.children) {
+                            // Check if user has a comment for this product
+                            if (productSnapshot.hasChild(userId)) {
+                                reviewCount++
+                            }
+                        }
+
+                        // Update the reviewsCount with the calculated value
+                        reviewsCount = reviewCount
+
+                        // Update UI state with the review count
+                        _uiState.update {
+                            it.copy(
+                                reviewsCount = reviewCount
+                            )
+                        }
+                    }
 
                     _uiState.update {
                         it.copy(
@@ -117,7 +140,6 @@ class ProfileViewModel : ViewModel() {
                             profileImageUrl = profileImageUrl,
                             addressCount = addressesCount,
                             lastFourDigits = lastFourDigits,
-                            reviewsCount = reviewsCount,
                             isLoading = false
                         )
                     }

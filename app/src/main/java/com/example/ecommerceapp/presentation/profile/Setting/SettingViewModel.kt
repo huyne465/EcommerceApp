@@ -3,7 +3,7 @@ package com.example.ecommerceapp.presentation.profile.Setting
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
-import com.example.ecommerceapp.presentation.Repo.UserPreferencesRepository
+import com.example.ecommerceapp.presentation.repo.UserPreferencesRepository
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn

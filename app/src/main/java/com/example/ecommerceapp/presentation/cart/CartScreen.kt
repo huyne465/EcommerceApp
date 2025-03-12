@@ -1,4 +1,4 @@
-package com.example.ecommerceapp.presentation.Cart
+package com.example.ecommerceapp.presentation.cart
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable

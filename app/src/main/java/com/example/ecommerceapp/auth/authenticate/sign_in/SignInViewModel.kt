@@ -122,4 +122,31 @@ class SignInViewModel : ViewModel() {
         }
     }
 
+
+    fun resetPassword(email: String, onSuccess: () -> Unit, onError: (String) -> Unit) {
+        if (email.isEmpty()) {
+            onError("Please enter your email address")
+            return
+        }
+
+        viewModelScope.launch {
+            try {
+                _uiState.update { currentState ->
+                    currentState.copy(isLoading = true)
+                }
+                auth.sendPasswordResetEmail(email).await()
+                _uiState.update { currentState ->
+                    currentState.copy(isLoading = false)
+                }
+                onSuccess()
+            } catch (e: Exception) {
+                _uiState.update { currentState ->
+                    currentState.copy(isLoading = false)
+                }
+                onError(e.localizedMessage ?: "Failed to send reset email")
+            }
+        }
+    }
+
+
 }

@@ -10,13 +10,14 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
-import com.example.ecommerceapp.presentation.Cart.CartScreen
-import com.example.ecommerceapp.presentation.Shop.ProductDetail.ProductDetailScreen
-import com.example.ecommerceapp.presentation.Shop.ProductManage.AddProductScreen
-import com.example.ecommerceapp.presentation.Shop.ShopScreen
+import com.example.ecommerceapp.auth.authenticate.reset_password.ResetPasswordScreen
+import com.example.ecommerceapp.presentation.cart.CartScreen
+import com.example.ecommerceapp.presentation.shop.productDetail.ProductDetailScreen
+import com.example.ecommerceapp.presentation.shop.productManage.AddProductScreen
+import com.example.ecommerceapp.presentation.shop.ShopScreen
 import com.example.ecommerceapp.presentation.AuthScreen
-import com.example.ecommerceapp.presentation.Order.OrderScreen
-import com.example.ecommerceapp.presentation.Repo.UserPreferencesRepository
+import com.example.ecommerceapp.presentation.order.OrderScreen
+import com.example.ecommerceapp.presentation.repo.UserPreferencesRepository
 import com.example.ecommerceapp.presentation.favorite_item.FavoriteScreen
 import com.example.ecommerceapp.presentation.profile.OrderHistory.OrderDetailScreen
 import com.example.ecommerceapp.presentation.profile.OrderHistory.OrderHistoryScreen
@@ -31,6 +32,7 @@ import com.example.ecommerceapp.auth.authenticate.sign_in.SignInScreen
 import com.example.ecommerceapp.auth.authenticate.sign_up.SignUpScreen
 import com.example.ecommerceapp.auth.authenticate.sign_in.SignInViewModel
 import com.example.ecommerceapp.auth.authenticate.sign_up.SignUpViewModel
+import com.example.ecommerceapp.presentation.profile.reviews.UserReviewsScreen
 import homeScreen
 
 @RequiresApi(Build.VERSION_CODES.O)
@@ -183,6 +185,28 @@ fun AppNavigation(
                 factory = SettingsViewModel.Factory(userPreferencesRepository)
             )
             SettingsScreen(navController, viewModel)
+        }
+
+        //Review
+        composable("user_reviews") {
+            UserReviewsScreen(
+                onNavigateBack = { navController.popBackStack() },
+                onNavigateToProduct = { productId ->
+                    navController.navigate("product_detail/$productId")
+                }
+            )
+        }
+
+        //Reset Password
+        composable(
+            route = "reset_password/{email}",
+            arguments = listOf(navArgument("email") { type = NavType.StringType })
+        ) { backStackEntry ->
+            val email = backStackEntry.arguments?.getString("email") ?: ""
+            ResetPasswordScreen(
+                emailArg = email,
+                navController = navController
+            )
         }
 
 

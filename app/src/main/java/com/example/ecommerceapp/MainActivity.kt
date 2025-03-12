@@ -14,7 +14,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import com.example.ecommerceapp.core.AppNavigation
-import com.example.ecommerceapp.presentation.Repo.UserPreferencesRepository
+import com.example.ecommerceapp.presentation.repo.UserPreferencesRepository
 import com.example.ecommerceapp.ui.theme.EcommerceAppTheme
 import vn.zalopay.sdk.ZaloPaySDK;
 import vn.zalopay.sdk.Environment;

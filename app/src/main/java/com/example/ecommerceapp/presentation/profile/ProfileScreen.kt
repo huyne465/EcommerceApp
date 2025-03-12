@@ -334,7 +334,7 @@ fun ProfileScreen(
                 ProfileMenuItem(
                     title = "My reviews",
                     subtitle = "Reviews for ${uiState.reviewsCount} items",
-                    onClick = { /* Navigate to reviews */ }
+                    onClick = { navController.navigate("user_reviews") }
                 )
 
                 ProfileMenuItem(

@@ -14,7 +14,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.ecommerceapp.model.Product
-import com.example.ecommerceapp.presentation.Shop.ProductItem
+import com.example.ecommerceapp.presentation.shop.ProductItem
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

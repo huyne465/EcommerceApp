@@ -1,4 +1,4 @@
-package com.example.ecommerceapp.presentation.Order
+package com.example.ecommerceapp.presentation.order
 
 import android.app.Activity
 import androidx.compose.foundation.background
@@ -25,8 +25,8 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import coil.compose.AsyncImage
 import com.example.ecommerceapp.model.CartItem
-import com.example.ecommerceapp.presentation.Cart.formatPrice
-import com.example.ecommerceapp.presentation.Order.OrderViewModel.PaymentMethod
+import com.example.ecommerceapp.presentation.cart.formatPrice
+import com.example.ecommerceapp.presentation.order.OrderViewModel.PaymentMethod
 import androidx.compose.foundation.layout.size
 import androidx.compose.ui.platform.LocalContext
 import com.example.ecommerceapp.presentation.profile.UserAddress.AddressList.AddressListViewModel
