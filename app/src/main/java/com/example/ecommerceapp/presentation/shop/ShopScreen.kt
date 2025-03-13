@@ -8,6 +8,7 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.Chat
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material.icons.outlined.StarOutline
 import androidx.compose.material3.*
@@ -16,11 +17,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import coil.compose.AsyncImage
+import com.example.ecommerceapp.crispChatBox.ActivityCrisp
 import com.example.ecommerceapp.model.Product
 
 
@@ -37,9 +40,12 @@ fun ShopScreen(
     navController: NavHostController,
 ) {
 
+    val context = LocalContext.current
+
     // Add this LaunchedEffect to force load products when the screen appears
     LaunchedEffect(Unit) {
         viewModel.loadProducts(forceReload = true)
+        viewModel.initializeCrisp(context)
     }
 
     val uiState by viewModel.uiState.collectAsState()
@@ -98,6 +104,13 @@ fun ShopScreen(
                 CenterAlignedTopAppBar(
                     title = { Text("Shop") },
                     actions = {
+                        // Add chat button
+                        IconButton(onClick = {
+//                            viewModel.resetCrispChat(context)
+                            viewModel.openCrispChat(context)
+                        }) {
+                            Icon(Icons.AutoMirrored.Filled.Chat, contentDescription = "Customer Support")
+                        }
                         // Add refresh button here
                         IconButton(onClick = { viewModel.loadProducts(forceReload = true) }) {
                             Icon(Icons.Default.Refresh, contentDescription = "Refresh")

@@ -15,6 +15,8 @@ android {
         targetSdk = 35
         versionCode = 1
         versionName = "1.0"
+        //enable multiDex
+        multiDexEnabled = true
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -116,4 +118,11 @@ dependencies {
 
     // DataStore Preferences
     implementation ("androidx.datastore:datastore-preferences:1.0.0")
+
+    //Crisp Chat
+    implementation ("im.crisp:crisp-sdk:2.0.11")
+
+    // If you're not using AndroidX
+    implementation ("com.android.support:multidex:1.0.3")
+
 }

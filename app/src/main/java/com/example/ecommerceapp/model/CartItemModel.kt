@@ -6,6 +6,7 @@ data class CartItem(
     val name: String = "",
     val price: Double = 0.0,
     val quantity: Int = 1,
+    val selectedSize: String? = null,
     val imageUrl: String = "",
     val brand: String = "",
     val timestamp: Long = 0,

@@ -31,7 +31,7 @@ fun ResetPasswordScreen(
     navController: NavHostController
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-    val composition by rememberLottieComposition(LottieCompositionSpec.RawRes(R.raw.heythere)) //get image
+    val composition by rememberLottieComposition(LottieCompositionSpec.RawRes(R.raw.reset))
 
     // Set the email from navigation arg if the viewModel's email is empty
     LaunchedEffect(emailArg) {
@@ -65,7 +65,7 @@ fun ResetPasswordScreen(
 
     Scaffold(
         topBar = {
-            TopAppBar(
+            CenterAlignedTopAppBar(
                 title = { Text("Reset Password") },
                 navigationIcon = {
                     IconButton(onClick = { navController.popBackStack() }) {

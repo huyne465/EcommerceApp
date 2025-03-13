@@ -62,8 +62,10 @@ fun OrderHistoryScreen(
                     .atZone(ZoneId.systemDefault())
                     .toLocalDate()
 
-                val afterStartDate = startDate?.let { orderDate.isAfter(it) || orderDate.isEqual(it) } ?: true
-                val beforeEndDate = endDate?.let { orderDate.isBefore(it) || orderDate.isEqual(it) } ?: true
+                val afterStartDate =
+                    startDate?.let { orderDate.isAfter(it) || orderDate.isEqual(it) } ?: true
+                val beforeEndDate =
+                    endDate?.let { orderDate.isBefore(it) || orderDate.isEqual(it) } ?: true
 
                 afterStartDate && beforeEndDate
             }
@@ -73,14 +75,21 @@ fun OrderHistoryScreen(
     // Active date range indicator
     val dateRangeText = when {
         startDate != null && endDate != null -> {
-            "${startDate!!.format(DateTimeFormatter.ofPattern("MMM dd, yyyy"))} - ${endDate!!.format(DateTimeFormatter.ofPattern("MMM dd, yyyy"))}"
+            "${startDate!!.format(DateTimeFormatter.ofPattern("MMM dd, yyyy"))} - ${
+                endDate!!.format(
+                    DateTimeFormatter.ofPattern("MMM dd, yyyy")
+                )
+            }"
         }
+
         startDate != null -> {
             "From ${startDate!!.format(DateTimeFormatter.ofPattern("MMM dd, yyyy"))}"
         }
+
         endDate != null -> {
             "Until ${endDate!!.format(DateTimeFormatter.ofPattern("MMM dd, yyyy"))}"
         }
+
         else -> "All Orders"
     }
 
@@ -194,8 +203,10 @@ fun OrderHistoryScreen(
     // Date Range Picker Dialog
     if (showDateRangePicker) {
         val datePickerState = rememberDateRangePickerState(
-            initialSelectedStartDateMillis = startDate?.atStartOfDay(ZoneId.systemDefault())?.toInstant()?.toEpochMilli(),
-            initialSelectedEndDateMillis = endDate?.atStartOfDay(ZoneId.systemDefault())?.toInstant()?.toEpochMilli(),
+            initialSelectedStartDateMillis = startDate?.atStartOfDay(ZoneId.systemDefault())
+                ?.toInstant()?.toEpochMilli(),
+            initialSelectedEndDateMillis = endDate?.atStartOfDay(ZoneId.systemDefault())
+                ?.toInstant()?.toEpochMilli(),
         )
 
         DatePickerDialog(
@@ -483,6 +494,8 @@ fun OrderCard(order: Order, onClick: () -> Unit) {
                             overflow = TextOverflow.Ellipsis
                         )
 
+
+
                         Text(
                             text = "× $totalItems",
                             style = MaterialTheme.typography.bodyMedium,
@@ -490,8 +503,23 @@ fun OrderCard(order: Order, onClick: () -> Unit) {
                         )
                     }
                 }
+                Spacer(modifier = Modifier.height(13.dp))
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    if (firstItem != null) {
+                        Text(
+                            text = "Size: ${firstItem.selectedSize}",
+                            style = MaterialTheme.typography.bodySmall,
+                            fontWeight = FontWeight.SemiBold,
+                            color = Color.Gray
+                        )
+                    }
+                }
 
-                Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.height(13.dp))
 
                 // Total price and view details button
                 Row(
@@ -571,3 +599,5 @@ fun formatTimestampToPattern(timestamp: Long): String {
     val dateTime = LocalDateTime.ofInstant(instant, ZoneId.systemDefault())
     return DateTimeFormatter.ofPattern("MMMM dd, yyyy | hh:mma").format(dateTime)
 }
+
+

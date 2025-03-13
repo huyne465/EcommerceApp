@@ -74,8 +74,9 @@ class OrderDetailViewModel : ViewModel() {
                 val price = itemSnapshot.child("price").getValue(Double::class.java) ?: 0.0
                 val productId = itemSnapshot.child("productId").getValue(String::class.java) ?: ""
                 val quantity = itemSnapshot.child("quantity").getValue(Int::class.java) ?: 0
+                val selectedSize = itemSnapshot.child("selectedSize").getValue(String::class.java) ?: ""
 
-                items.add(OrderItem(brand, imageUrl, name, price, productId, quantity))
+                items.add(OrderItem(brand, imageUrl, name, price, productId, quantity, selectedSize))
             }
 
             // Get status

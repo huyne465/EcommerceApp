@@ -19,7 +19,8 @@ data class OrderItem(
     val name: String,
     val price: Double,
     val productId: String,
-    val quantity: Int
+    val quantity: Int,
+    val selectedSize: String
 )
 
 data class PaymentDetails(

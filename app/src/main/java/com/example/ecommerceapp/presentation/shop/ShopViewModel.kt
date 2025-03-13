@@ -1,13 +1,20 @@
 package com.example.ecommerceapp.presentation.shop
 
+import android.content.Context
+import android.content.Intent
+import android.util.Log
+import androidx.core.content.ContextCompat.startActivity
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.airbnb.lottie.animation.content.Content
 import com.example.ecommerceapp.model.Product
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.ValueEventListener
+import im.crisp.client.external.Crisp
+import im.crisp.client.external.Crisp.configure
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -45,6 +52,7 @@ class ShopViewModel : ViewModel() {
         RATING
     }
 
+
     private val _uiState = MutableStateFlow(ShopUiState(isLoading = true))
     val uiState: StateFlow<ShopUiState> = _uiState.asStateFlow()
 
@@ -66,6 +74,37 @@ class ShopViewModel : ViewModel() {
         ) }
         // Force immediate load on initialization
         loadProducts(true)
+    }
+
+
+    // Crisp chat integration functions
+    fun initializeCrisp(context: android.content.Context) {
+        try {
+            // Using ActivityCrisp utility class for configuration
+            com.example.ecommerceapp.crispChatBox.ActivityCrisp.configureCrisp(context)
+            Log.d("ShopViewModel", "Crisp chat initialized successfully")
+
+            // Set user information if available
+            FirebaseAuth.getInstance().currentUser?.let { user ->
+                Crisp.setUserEmail(user.email ?: "")
+                Crisp.setUserNickname(user.displayName ?: "")
+            }
+        } catch (e: Exception) {
+            Log.e("ShopViewModel", "Failed to initialize Crisp: ${e.message}", e)
+        }
+    }
+
+    fun openCrispChat(context: android.content.Context) {
+        com.example.ecommerceapp.crispChatBox.ActivityCrisp.openCrispChat(context)
+    }
+
+    fun resetCrispChat(context: android.content.Context) {
+        try {
+            Crisp.resetChatSession(context)
+            Log.d("ShopViewModel", "Crisp chat session reset successfully")
+        } catch (e: Exception) {
+            Log.e("ShopViewModel", "Failed to reset Crisp session: ${e.message}", e)
+        }
     }
 
     fun loadProducts(forceReload: Boolean = false) {
@@ -237,4 +276,5 @@ class ShopViewModel : ViewModel() {
             }
         }
     }
+
 }

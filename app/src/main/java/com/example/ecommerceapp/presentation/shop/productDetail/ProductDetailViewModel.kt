@@ -41,7 +41,8 @@ class ProductDetailViewModel(application: Application,private val productId: Str
         val errorMessage: String? = null,
         val quantity: Int = 1,
         val actionMessage: String? = null,
-        val comments: List<ProductComment> = emptyList()
+        val comments: List<ProductComment> = emptyList(),
+        val selectedSize: String? = null // Add selected size
     )
 
     private val _uiState = MutableStateFlow(ProductDetailUiState())
@@ -78,6 +79,11 @@ class ProductDetailViewModel(application: Application,private val productId: Str
             }
         }
     }
+
+    fun selectSize(size: String) {
+        _uiState.update { it.copy(selectedSize = size) }
+    }
+
     // Function to load comments for this product
     private fun loadComments() {
         commentsRef.child(productId).orderByChild("timestamp").addValueEventListener(object : ValueEventListener {
@@ -351,6 +357,8 @@ class ProductDetailViewModel(application: Application,private val productId: Str
     fun addToCart() {
         val product = _uiState.value.product ?: return
         val quantity = _uiState.value.quantity
+        val selectedSize = _uiState.value.selectedSize ?: return
+
 
         viewModelScope.launch {
             try {
@@ -360,6 +368,7 @@ class ProductDetailViewModel(application: Application,private val productId: Str
                     productId = product.id,
                     name = product.name,
                     price = product.price,
+                    selectedSize = selectedSize,
                     quantity = quantity,
                     imageUrl = product.imageUrl,
                     brand = product.brand,

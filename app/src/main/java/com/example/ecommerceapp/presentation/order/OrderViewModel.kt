@@ -43,6 +43,7 @@ class OrderViewModel : ViewModel() {
         val tax: Double = 0.0,
         val shipping: Double = 0.0,
         val total: Double = 0.0,
+        val selectedSize: String? = null,
         val selectedPaymentMethod: PaymentMethod = PaymentMethod.COD,
         val actionMessage: String? = null,
         val orderPlaced: Boolean = false,
@@ -88,7 +89,7 @@ class OrderViewModel : ViewModel() {
 
                 val subtotal = cartItems.sumOf { it.price * it.quantity }
                 val tax = subtotal * 0.1
-                val shipping = if (subtotal > 0) 4.99 else 0.0
+                val shipping = if (subtotal > 0) 3.0 else 0.0
                 val total = subtotal + tax + shipping
 
                 _uiState.update {
@@ -116,7 +117,7 @@ class OrderViewModel : ViewModel() {
         val cartItems = _uiState.value.cartItems
         val subtotal = cartItems.sumOf { it.price * it.quantity }
         val tax = subtotal * 0.1
-        val shipping = if (subtotal > 0) 4.99 else 0.0
+        val shipping = if (subtotal > 0) 3.0 else 0.0
         val total = subtotal + tax + shipping
 
         _uiState.update {
@@ -324,6 +325,7 @@ class OrderViewModel : ViewModel() {
                             "name" to item.name,
                             "brand" to item.brand,
                             "price" to item.price,
+                            "selectedSize" to item.selectedSize,
                             "quantity" to item.quantity,
                             "imageUrl" to item.imageUrl
                         )

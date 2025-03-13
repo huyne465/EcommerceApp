@@ -43,7 +43,7 @@ fun UserReviewsScreen(
 
     Scaffold(
         topBar = {
-            TopAppBar(
+            CenterAlignedTopAppBar(
                 title = { Text("My Reviews") },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {

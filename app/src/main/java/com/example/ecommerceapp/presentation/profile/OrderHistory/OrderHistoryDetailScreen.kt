@@ -192,6 +192,12 @@ fun OrderItems(items: List<OrderItem>) {
                             item.name,
                             style = MaterialTheme.typography.bodyMedium
                         )
+
+                        Text(
+                            "Size: ${item.selectedSize}",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = Color.Gray
+                        )
                         Text(
                             "Brand: ${item.brand}",
                             style = MaterialTheme.typography.bodySmall,

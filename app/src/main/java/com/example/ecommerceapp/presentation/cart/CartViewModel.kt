@@ -64,7 +64,7 @@ class CartViewModel : ViewModel() {
                 // Calculate costs
                 val subtotal = cartItems.sumOf { it.price * it.quantity }
                 val tax = subtotal * 0.1 // 10% tax
-                val shipping = if (subtotal > 0) 4.99 else 0.0 // Shipping fee
+                val shipping = if (subtotal > 0) 3.0 else 0.0 // Shipping fee
                 val total = subtotal + tax + shipping
 
                 _uiState.update {

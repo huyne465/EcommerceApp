@@ -183,6 +183,38 @@ fun ProductDetailScreen(
 
                         Spacer(modifier = Modifier.height(16.dp))
 
+
+                        // Size Picker
+                        Text(
+                            text = "Select Size",
+                            style = MaterialTheme.typography.titleLarge,
+                            fontWeight = FontWeight.Bold
+                        )
+
+                        Spacer(modifier = Modifier.height(8.dp))
+
+                        Row(
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            modifier = Modifier.horizontalScroll(rememberScrollState())
+                        ) {
+                            val availableSizes = listOf("S", "M", "L", "XL")
+                            availableSizes.forEach { size ->
+                                Button(
+                                    onClick = { viewModel.selectSize(size) },
+                                    colors = ButtonDefaults.buttonColors(
+                                        containerColor = if (uiState.selectedSize == size)
+                                            MaterialTheme.colorScheme.primary
+                                        else
+                                            Color.Gray
+                                    )
+                                ) {
+                                    Text(size)
+                                }
+                            }
+                        }
+
+                        Spacer(modifier = Modifier.height(16.dp))
+
                         // Quantity Selector
                         QuantitySelector(
                             quantity = uiState.quantity,
