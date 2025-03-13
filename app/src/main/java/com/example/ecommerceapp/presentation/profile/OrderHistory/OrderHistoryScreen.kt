@@ -19,6 +19,8 @@ import androidx.compose.material.icons.filled.FilterAlt
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.Receipt
 import androidx.compose.material.icons.filled.ShoppingBag
+import androidx.compose.material.icons.filled.ArrowDownward
+import androidx.compose.material.icons.filled.ArrowUpward
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -29,6 +31,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.DialogProperties
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import com.example.ecommerceapp.model.Order
@@ -46,6 +49,7 @@ fun OrderHistoryScreen(
     viewModel: OrderHistoryViewModel = viewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    val currentSortOrder by viewModel.sortOrder.collectAsState()
     var showDateRangePicker by remember { mutableStateOf(false) }
 
     // Date range state
@@ -70,6 +74,22 @@ fun OrderHistoryScreen(
                 afterStartDate && beforeEndDate
             }
         }
+    }
+
+    // Apply sort order
+    val sortedOrders = remember(filteredOrders, currentSortOrder) {
+        viewModel.sortOrders(filteredOrders)
+    }
+
+    // Add a LaunchedEffect to reload orders if needed
+    LaunchedEffect(Unit) {
+        viewModel.loadOrders()
+    }
+
+    // Confirm button click for date picker
+    val applyDateFilter: () -> Unit = {
+        // The filter is applied automatically through State changes
+        showDateRangePicker = false
     }
 
     // Active date range indicator
@@ -106,6 +126,14 @@ fun OrderHistoryScreen(
                     }
                 },
                 actions = {
+                    // Sort button
+                    IconButton(onClick = { viewModel.toggleSortOrder() }) {
+                        Icon(
+                            imageVector = if (currentSortOrder == OrderHistoryViewModel.SortOrder.NEWEST_FIRST)
+                                Icons.Default.ArrowDownward else Icons.Default.ArrowUpward,
+                            contentDescription = "Sort by date"
+                        )
+                    }
                     IconButton(onClick = { showDateRangePicker = true }) {
                         Icon(
                             imageVector = Icons.Default.DateRange,
@@ -126,6 +154,24 @@ fun OrderHistoryScreen(
                 .padding(padding)
                 .background(MaterialTheme.colorScheme.background)
         ) {
+
+
+            // Sort order indicator
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 8.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = when (currentSortOrder) {
+                        OrderHistoryViewModel.SortOrder.NEWEST_FIRST -> "Newest First"
+                        OrderHistoryViewModel.SortOrder.OLDEST_FIRST -> "Oldest First"
+                    },
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
             // Date range filter chip
             if (startDate != null || endDate != null) {
                 Row(
@@ -178,14 +224,12 @@ fun OrderHistoryScreen(
             }
 
             Box(modifier = Modifier.fillMaxSize()) {
-                // Fixed AnimatedVisibility calls by using them directly rather than in a Box scope
                 if (uiState.errorMessage != null) {
                     ErrorState(message = uiState.errorMessage ?: "")
-                } else if (filteredOrders.isEmpty()) {
+                } else if (sortedOrders.isEmpty()) {
                     if (uiState.orders.isEmpty()) {
                         EmptyOrdersState(navController)
                     } else {
-                        // No orders in selected date range
                         NoFilteredOrdersState(
                             onResetFilters = {
                                 startDate = null
@@ -194,7 +238,7 @@ fun OrderHistoryScreen(
                         )
                     }
                 } else {
-                    OrdersList(filteredOrders, navController)
+                    OrdersList(sortedOrders, navController)  // Use sortedOrders instead of filteredOrders
                 }
             }
         }
@@ -209,47 +253,75 @@ fun OrderHistoryScreen(
                 ?.toInstant()?.toEpochMilli(),
         )
 
-        DatePickerDialog(
+        BasicAlertDialog(
             onDismissRequest = { showDateRangePicker = false },
-            confirmButton = {
-                TextButton(
-                    onClick = {
-                        datePickerState.selectedStartDateMillis?.let { startMillis ->
-                            startDate = Instant.ofEpochMilli(startMillis)
-                                .atZone(ZoneId.systemDefault())
-                                .toLocalDate()
-                        } ?: run { startDate = null }
+            modifier = Modifier
+                .fillMaxWidth()
+                .fillMaxHeight(0.85f),
+            properties = DialogProperties(usePlatformDefaultWidth = false)
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(
+                        color = MaterialTheme.colorScheme.surface,
+                        shape = RoundedCornerShape(28.dp)
+                    )
+                    .padding(16.dp)
+            ) {
+                Text(
+                    text = "Filter Orders by Date",
+                    style = MaterialTheme.typography.headlineSmall,
+                    modifier = Modifier.padding(start = 16.dp, top = 16.dp).align(Alignment.CenterHorizontally)
+                )
 
-                        datePickerState.selectedEndDateMillis?.let { endMillis ->
-                            endDate = Instant.ofEpochMilli(endMillis)
-                                .atZone(ZoneId.systemDefault())
-                                .toLocalDate()
-                        } ?: run { endDate = null }
+                Text(
+                    text = "Select start and end dates",
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(start = 16.dp, bottom = 8.dp).align(Alignment.CenterHorizontally)
+                )
 
-                        showDateRangePicker = false
-                    }
+                DateRangePicker(
+                    state = datePickerState,
+                    modifier = Modifier.weight(1f),
+                    showModeToggle = false
+                )
+
+                // Button row
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp, vertical = 8.dp),
+                    horizontalArrangement = Arrangement.End
                 ) {
-                    Text("OK")
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = { showDateRangePicker = false }) {
-                    Text("Cancel")
+                    TextButton(onClick = { showDateRangePicker = false }) {
+                        Text("Cancel")
+                    }
+
+                    Spacer(modifier = Modifier.width(8.dp))
+
+                    TextButton(
+                        onClick = {
+                            datePickerState.selectedStartDateMillis?.let { startMillis ->
+                                startDate = Instant.ofEpochMilli(startMillis)
+                                    .atZone(ZoneId.systemDefault())
+                                    .toLocalDate()
+                            } ?: run { startDate = null }
+
+                            datePickerState.selectedEndDateMillis?.let { endMillis ->
+                                endDate = Instant.ofEpochMilli(endMillis)
+                                    .atZone(ZoneId.systemDefault())
+                                    .toLocalDate()
+                            } ?: run { endDate = null }
+
+                            applyDateFilter()
+                        }
+                    ) {
+                        Text("Apply")
+                    }
                 }
             }
-        ) {
-            DateRangePicker(
-                state = datePickerState,
-                title = { Text("Filter Orders by Date") },
-                headline = {
-                    Text(
-                        "Select start and end dates",
-                        style = MaterialTheme.typography.labelMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                },
-                showModeToggle = false
-            )
         }
     }
 }

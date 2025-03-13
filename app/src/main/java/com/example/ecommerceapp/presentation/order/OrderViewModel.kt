@@ -52,7 +52,8 @@ class OrderViewModel : ViewModel() {
         val shippingAddress: AddressListViewModel.Address? = null,
         val isZaloPayRequested: Boolean = false,
         val zaloPayToken: String? = null,
-        val zaloPayAppTransID: String? = null
+        val zaloPayAppTransID: String? = null,
+        val navigateToGreeting: Boolean = false  // New field to trigger navigation
     )
 
     private val _uiState = MutableStateFlow(OrderUiState())
@@ -240,7 +241,8 @@ class OrderViewModel : ViewModel() {
                                                 isProcessing = false,
                                                 orderPlaced = true,
                                                 isZaloPayRequested = false,
-                                                actionMessage = "Payment successful! Your order has been placed."
+                                                actionMessage = "Payment successful! Your order has been placed.",
+                                                navigateToGreeting = true  // Set flag to navigate
                                             )
                                         }
                                     } catch (e: Exception) {
@@ -362,7 +364,8 @@ class OrderViewModel : ViewModel() {
                             isProcessing = false,
                             orderPlaced = true,
                             orderId = orderId,
-                            actionMessage = "Order placed successfully!"
+                            actionMessage = "Order placed successfully!",
+                                    navigateToGreeting = true  // Set flag to navigate
                         )
                     }
                 } else {
@@ -399,7 +402,9 @@ class OrderViewModel : ViewModel() {
         processZaloPayment(activity, orderId, currentState.total)
     }
 
-
+    fun resetNavigationFlag() {
+        _uiState.update { it.copy(navigateToGreeting = false) }
+    }
 
     fun clearActionMessage() {
         _uiState.update { it.copy(actionMessage = null) }

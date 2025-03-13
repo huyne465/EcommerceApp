@@ -10,6 +10,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
@@ -281,18 +282,62 @@ fun ProfileScreen(
 
                 Spacer(modifier = Modifier.width(16.dp))
 
-                // Name and email
+                // Name and email with long-press functionality
                 Column {
+                    var showEditNameDialog by remember { mutableStateOf(false) }
+                    var newName by remember { mutableStateOf(uiState.name) }
+
                     Text(
                         text = uiState.name,
                         style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.clickable(
+                            interactionSource = remember { MutableInteractionSource() },
+                            indication = null  // No visual indication
+                        ) {
+                            showEditNameDialog = true
+                            newName = uiState.name
+                        }
                     )
                     Text(
                         text = uiState.email,
                         style = MaterialTheme.typography.bodyMedium,
                         color = Color.Gray
                     )
+
+                    // Dialog for editing username
+                    if (showEditNameDialog) {
+                        AlertDialog(
+                            onDismissRequest = { showEditNameDialog = false },
+                            title = { Text("Edit Username") },
+                            text = {
+                                OutlinedTextField(
+                                    value = newName,
+                                    onValueChange = { newName = it },
+                                    label = { Text("Name") },
+                                    singleLine = true,
+                                    modifier = Modifier.fillMaxWidth()
+                                )
+                            },
+                            confirmButton = {
+                                TextButton(
+                                    onClick = {
+                                        if (newName.isNotBlank()) {
+                                            viewModel.updateUsername(newName)
+                                        }
+                                        showEditNameDialog = false
+                                    }
+                                ) {
+                                    Text("Save")
+                                }
+                            },
+                            dismissButton = {
+                                TextButton(onClick = { showEditNameDialog = false }) {
+                                    Text("Cancel")
+                                }
+                            }
+                        )
+                    }
                 }
             }
 
@@ -346,7 +391,7 @@ fun ProfileScreen(
 
             Spacer(modifier = Modifier.height(30.dp))
 
-            Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center, ) {
+            Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
                 Button(
                     onClick = {
                         // Sign out
@@ -405,7 +450,7 @@ fun ProfileMenuItem(
             )
         }
 
-        Divider(
+        HorizontalDivider(
             modifier = Modifier.padding(top = 8.dp),
             thickness = 0.5.dp,
             color = Color.LightGray

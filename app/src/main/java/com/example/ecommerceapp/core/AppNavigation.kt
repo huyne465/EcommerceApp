@@ -32,6 +32,7 @@ import com.example.ecommerceapp.auth.authenticate.sign_in.SignInScreen
 import com.example.ecommerceapp.auth.authenticate.sign_up.SignUpScreen
 import com.example.ecommerceapp.auth.authenticate.sign_in.SignInViewModel
 import com.example.ecommerceapp.auth.authenticate.sign_up.SignUpViewModel
+import com.example.ecommerceapp.presentation.order.greeting.GreetingScreen
 import com.example.ecommerceapp.presentation.profile.reviews.UserReviewsScreen
 import homeScreen
 
@@ -149,7 +150,7 @@ fun AppNavigation(
             )
         }
 
-        // Add this to your existing NavHost routes in AppNavigation.kt
+        // address list
         composable("address_list") {
             AddressListScreen(
                 navController = navController
@@ -157,7 +158,7 @@ fun AppNavigation(
         }
 
 
-        // Add this inside the NavHost composable
+        // order
         composable("order") {
             OrderScreen(
                 navController = navController,
@@ -170,6 +171,13 @@ fun AppNavigation(
             )
         }
 
+        // Thank you / greeting screen after order placement
+        composable("greeting") {
+            GreetingScreen(navController = navController)
+        }
+
+
+        //Order history
         composable("order_history") {
             OrderHistoryScreen(navController)
         }
@@ -177,9 +185,9 @@ fun AppNavigation(
             val orderId = backStackEntry.arguments?.getString("orderId") ?: return@composable
             OrderDetailScreen(navController, orderId)
         }
-
+        //change password
         composable("change_password") { ChangePasswordScreen(navController) }
-
+        //settings
         composable("settings") {
             val viewModel = viewModel<SettingsViewModel>(
                 factory = SettingsViewModel.Factory(userPreferencesRepository)

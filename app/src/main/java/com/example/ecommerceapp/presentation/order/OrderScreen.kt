@@ -28,6 +28,7 @@ import com.example.ecommerceapp.model.CartItem
 import com.example.ecommerceapp.presentation.cart.formatPrice
 import com.example.ecommerceapp.presentation.order.OrderViewModel.PaymentMethod
 import androidx.compose.foundation.layout.size
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.ui.platform.LocalContext
 import com.example.ecommerceapp.presentation.profile.UserAddress.AddressList.AddressListViewModel
 
@@ -68,6 +69,21 @@ fun OrderScreen(
             onOrderComplete()
         }
     }
+
+    // Handle navigation to greeting screen
+    LaunchedEffect(uiState.navigateToGreeting) {
+        if (uiState.navigateToGreeting) {
+            navController.navigate("greeting") {
+                // Clear back stack so user can't go back to checkout
+                popUpTo("cart") {
+                    inclusive = true
+                }
+            }
+            // Reset the flag after navigation
+            viewModel.resetNavigationFlag()
+        }
+    }
+
 
     // Handle ZaloPay payment initiation when orderId exists
     // and the selected payment method is ZaloPay
@@ -123,7 +139,7 @@ fun OrderScreen(
                 title = { Text("Checkout") },
                 navigationIcon = {
                     IconButton(onClick = { navController.popBackStack() }) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "Back")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
                     }
                 }
             )

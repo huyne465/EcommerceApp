@@ -20,12 +20,39 @@ class OrderHistoryViewModel : ViewModel() {
     private val database = FirebaseDatabase.getInstance("https://ecommerceapp-58b7f-default-rtdb.asia-southeast1.firebasedatabase.app")
     private val auth = FirebaseAuth.getInstance()
 
+    // Add sort order state
+    enum class SortOrder {
+        NEWEST_FIRST, OLDEST_FIRST
+    }
+
     private val _uiState = MutableStateFlow(OrderHistoryUiState())
     val uiState: StateFlow<OrderHistoryUiState> = _uiState
+
+    // Track current sort order
+    private val _sortOrder = MutableStateFlow(SortOrder.NEWEST_FIRST)
+    val sortOrder: StateFlow<SortOrder> = _sortOrder
 
     init {
         loadOrders()
     }
+
+    // Function to toggle sort order
+    fun toggleSortOrder() {
+        _sortOrder.value = when (_sortOrder.value) {
+            SortOrder.NEWEST_FIRST -> SortOrder.OLDEST_FIRST
+            SortOrder.OLDEST_FIRST -> SortOrder.NEWEST_FIRST
+        }
+    }
+
+    // Function to apply sort
+    fun sortOrders(orders: List<Order>): List<Order> {
+        return when (_sortOrder.value) {
+            SortOrder.NEWEST_FIRST -> orders.sortedByDescending { it.timestamp }
+            SortOrder.OLDEST_FIRST -> orders.sortedBy { it.timestamp }
+        }
+    }
+
+
 
     fun loadOrders() {
         viewModelScope.launch {

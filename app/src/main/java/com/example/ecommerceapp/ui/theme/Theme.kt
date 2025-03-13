@@ -39,13 +39,37 @@ Color(0xFF7FD4F7) // Light blue
 Color(0xFFA6E6F7) // Very light blue
 Color(0xFFD9F6FB) // Almost white blue*/
 
+/*SHADES (Navy + black):
+
+Color(0xFF003366) // Base navy
+Color(0xFF002B57) // Darker navy
+Color(0xFF002347) // Very dark navy
+Color(0xFF001A33) // Nearly black-navy
+Color(0xFF00101F) // Almost black
+
+TONES (Navy + grey):
+
+Color(0xFF003366) // Same base navy
+Color(0xFF355679) // Navy-grey
+Color(0xFF5F758C) // More grey-navy
+Color(0xFF8498A6) // Grey with navy tint
+Color(0xFFA3ADB6) // Mostly grey
+
+TINTS (Navy + white):
+
+Color(0xFF003366) // Same base navy
+Color(0xFF335C85) // Lighter navy
+Color(0xFF6685A3) // Light navy
+Color(0xFF99ADC2) // Very light navy
+Color(0xFFCCD6E0) // Almost white navy*/
+
 // Define your custom colors
-val LightPrimary = Color(0xFF1976D2)
+val LightPrimary = Color(0xFF355679)
 val LightPrimaryVariant = Color(0xFF4B89C8)
 val LightSecondary = Color(0xFF789DC0)
 val LightBackground = Color(0xFFFFFFFF) // White background for light mode
 
-val DarkPrimary = Color(0xFFD9F6FB)
+val DarkPrimary = Color(0xFF6685A3)
 val DarkPrimaryVariant = Color(0xFF4B89C8)
 val DarkSecondary = Color(0xFF789DC0)
 val DarkBackground = Color(0xFF121212) // Dark background for dark mode

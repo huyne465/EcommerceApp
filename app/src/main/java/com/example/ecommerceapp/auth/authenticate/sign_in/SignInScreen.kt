@@ -139,7 +139,7 @@ fun SignInScreen(
             enabled = !uiState.isLoading,
             onClick = {
                 viewModel.signIn(uiState.email, uiState.password)
-                if (uiState.isSuccess){
+                if (uiState.isSuccess) {
                     navController.navigate("home")
                 }
             },
@@ -147,7 +147,7 @@ fun SignInScreen(
                 .fillMaxWidth(0.8f)
                 .padding(bottom = 16.dp)
         ) {
-            if(uiState.isLoading) {
+            if (uiState.isLoading) {
                 Text(text = "Loading...")
             } else {
                 Text(text = "Sign in")

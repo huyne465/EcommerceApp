@@ -179,6 +179,22 @@ class ProfileViewModel : ViewModel() {
             }
         }
     }
+    //update username
+    fun updateUsername(newName: String) {
+        viewModelScope.launch {
+            try {
+                // Update in Firebase Realtime Database if user is logged in
+                auth.currentUser?.let { user ->
+                    database.getReference("users").child(userId).child("name").setValue(newName)
+
+                    // Update UI state
+                    _uiState.update { it.copy(name = newName) }
+                }
+            } catch (e: Exception) {
+                _uiState.update { it.copy(errorMessage = "Failed to update username: ${e.message}") }
+            }
+        }
+    }
 
     // Function to sign out
     fun signOut() {
