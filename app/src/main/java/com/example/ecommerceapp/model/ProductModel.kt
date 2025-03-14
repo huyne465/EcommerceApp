@@ -10,6 +10,7 @@ data class Product(
     val selectedSize: String? = null,
     val rating: Int = 0,
     val reviewCount: Int = 0,
+    val stock: Int = 0,
     val imageUrl: String = "",
     val category: String? = null,
     var isFavorite: Boolean = false,

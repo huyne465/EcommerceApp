@@ -1,4 +1,4 @@
-package com.example.ecommerceapp.presentation.shop.productManage
+package com.example.ecommerceapp.presentation.admin.manageProduct
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -21,6 +21,7 @@ class AddProductViewModel : ViewModel() {
         val imageUrl: String = "",
         val brand: String = "",
         val category: String = "unknown",
+        val stock: String = "",  // Added stock field
         val isLoading: Boolean = false,
         val errorMessage: String? = null,
         val isSuccess: Boolean = false,
@@ -56,6 +57,10 @@ class AddProductViewModel : ViewModel() {
 
     fun onBrandChange(brand: String) {
         _uiState.update { it.copy(brand = brand) }
+    }
+
+    fun onStockChange(stock: String) {
+        _uiState.update { it.copy(stock = stock) }
     }
 
     // Individual field validation functions
@@ -151,6 +156,38 @@ class AddProductViewModel : ViewModel() {
         return true
     }
 
+    private fun validateStock(): Boolean {
+        if (_uiState.value.stock.isEmpty()) {
+            _uiState.update { currentState ->
+                currentState.copy(
+                    errorMessage = "Stock must not be empty"
+                )
+            }
+            return false
+        }
+
+        val stockValue = _uiState.value.stock.toIntOrNull()
+        if (stockValue == null) {
+            _uiState.update { currentState ->
+                currentState.copy(
+                    errorMessage = "Stock must be a valid number"
+                )
+            }
+            return false
+        }
+
+        if (stockValue < 0) {
+            _uiState.update { currentState ->
+                currentState.copy(
+                    errorMessage = "Stock cannot be negative"
+                )
+            }
+            return false
+        }
+
+        return true
+    }
+
     fun addProduct() {
         // Validate fields
         if (!validateName()) {
@@ -177,11 +214,16 @@ class AddProductViewModel : ViewModel() {
             return
         }
 
+        if (!validateStock()) {
+            return
+        }
+
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, errorMessage = null) }
 
             try {
                 val price = _uiState.value.price.toDouble()
+                val stock = _uiState.value.stock.toInt()
                 val productId = productsRef.push().key
 
                 val product = Product(
@@ -194,7 +236,8 @@ class AddProductViewModel : ViewModel() {
                     category = _uiState.value.selectedCategory,
                     rating = 0,
                     reviewCount = 0,
-                    isFavorite = false
+                    isFavorite = false,
+                    stock = stock
                 )
 
                 // Add to Firebase Realtime Database
@@ -210,6 +253,7 @@ class AddProductViewModel : ViewModel() {
                         price = "",
                         imageUrl = "",
                         brand = "",
+                        stock = " ",
                         category = "",
                         selectedCategory = ""
                     )

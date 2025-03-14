@@ -13,7 +13,7 @@ import androidx.navigation.navArgument
 import com.example.ecommerceapp.auth.authenticate.reset_password.ResetPasswordScreen
 import com.example.ecommerceapp.presentation.cart.CartScreen
 import com.example.ecommerceapp.presentation.shop.productDetail.ProductDetailScreen
-import com.example.ecommerceapp.presentation.shop.productManage.AddProductScreen
+import com.example.ecommerceapp.presentation.admin.manageProduct.AddProductScreen
 import com.example.ecommerceapp.presentation.shop.ShopScreen
 import com.example.ecommerceapp.presentation.AuthScreen
 import com.example.ecommerceapp.presentation.order.OrderScreen
@@ -34,13 +34,19 @@ import com.example.ecommerceapp.auth.authenticate.sign_in.SignInViewModel
 import com.example.ecommerceapp.auth.authenticate.sign_up.SignUpViewModel
 import com.example.ecommerceapp.presentation.order.greeting.GreetingScreen
 import com.example.ecommerceapp.presentation.profile.reviews.UserReviewsScreen
-import homeScreen
+import com.google.firebase.auth.ktx.auth
+import com.google.firebase.ktx.Firebase
+import HomeScreen
+import androidx.compose.material.ExperimentalMaterialApi
+import com.example.ecommerceapp.presentation.admin.manageProduct.EditProductScreen
+import com.example.ecommerceapp.presentation.admin.manageProduct.ManageProductScreen
 
+@OptIn(ExperimentalMaterialApi::class)
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun AppNavigation(
     modifier: Modifier = Modifier,
-    userPreferencesRepository: UserPreferencesRepository
+    userPreferencesRepository: UserPreferencesRepository,
 ) {
     val navController = rememberNavController()
     val signInViewModel = viewModel(modelClass = SignInViewModel::class.java)
@@ -60,14 +66,14 @@ fun AppNavigation(
         }
 
         composable("home") {
-            homeScreen(modifier, navController)
+            val userId = Firebase.auth.currentUser?.uid ?: ""
+            HomeScreen(modifier, navController, userId)
         }
 
         composable("shop") {
             ShopScreen(
                 navController = navController,
                 onNavigateToHome = { navController.navigate("home") },
-                onAddProductClick = { navController.navigate("add_product") },
                 onNavigateToCart = { navController.navigate("cart") },
                 onNavigateToFavorites = { navController.navigate("favorites") },
                 onNavigateToProfile = { navController.navigate("profile") },
@@ -215,6 +221,20 @@ fun AppNavigation(
                 emailArg = email,
                 navController = navController
             )
+        }
+
+        //manage products in admin panel
+        composable("manage_products") {
+            ManageProductScreen(navController = navController)
+        }
+
+        //Edit product
+        composable(
+            route = "edit_product/{productId}",
+            arguments = listOf(navArgument("productId") { type = NavType.StringType })
+        ) { backStackEntry ->
+            val productId = backStackEntry.arguments?.getString("productId") ?: ""
+            EditProductScreen(navController = navController, productId = productId)
         }
 
 

@@ -60,6 +60,7 @@ dependencies {
     implementation(libs.play.services.identity)
     implementation(libs.androidx.datastore.core.android)
     implementation(libs.play.services.wallet)
+    implementation(libs.play.services.analytics.impl)
 
 
 

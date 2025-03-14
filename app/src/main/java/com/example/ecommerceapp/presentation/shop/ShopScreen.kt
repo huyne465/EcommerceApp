@@ -23,7 +23,6 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import coil.compose.AsyncImage
-import com.example.ecommerceapp.crispChatBox.ActivityCrisp
 import com.example.ecommerceapp.model.Product
 
 
@@ -35,7 +34,6 @@ fun ShopScreen(
     onNavigateToCart: () -> Unit,
     onNavigateToFavorites: () -> Unit,
     onNavigateToProfile: () -> Unit,
-    onAddProductClick: () -> Unit,
     onProductClick: (String) -> Unit,
     navController: NavHostController,
 ) {
@@ -117,9 +115,6 @@ fun ShopScreen(
                         }
                         IconButton(onClick = { showSearchBar = true }) {
                             Icon(Icons.Default.Search, contentDescription = "Search")
-                        }
-                        IconButton(onClick = onAddProductClick) {
-                            Icon(Icons.Default.Add, contentDescription = "Add Product")
                         }
                     }
                 )

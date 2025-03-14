@@ -1,6 +1,18 @@
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
@@ -12,9 +24,18 @@ import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.ShoppingBag
 import androidx.compose.material.icons.filled.ShoppingCart
-import androidx.compose.material.icons.outlined.ShoppingCart
-import androidx.compose.material3.*
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Icon
+import androidx.compose.material3.ModalDrawerSheet
+import androidx.compose.material3.ModalNavigationDrawer
+import androidx.compose.material3.NavigationBar
+import androidx.compose.material3.NavigationBarItem
+import androidx.compose.material3.NavigationBarItemDefaults
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -25,88 +46,80 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import com.example.ecommerceapp.R
-import com.google.firebase.Firebase
-import com.google.firebase.auth.auth
+import com.example.ecommerceapp.presentation.home.HomeViewModel
+import kotlinx.coroutines.launch
 
 @Composable
-fun homeScreen(
+fun HomeScreen(
     modifier: Modifier, navController: NavHostController,
+    userId: String, // Pass the user ID as a parameter
+    viewModel: HomeViewModel = viewModel() // Use HomeViewModel
 ) {
+    val adminId = "zokfRMBO0eZsE6yRWi3TsDOj2KS2"
+    val coroutineScope = rememberCoroutineScope()
+
+    if (userId == adminId) {
+        ModalNavigationDrawer(
+            drawerState = viewModel.drawerState,
+            drawerContent = {
+                ModalDrawerSheet {
+                    // Drawer content for admin
+                    Column(modifier = Modifier.padding(16.dp)) {
+                        Text("Admin Panel", fontWeight = FontWeight.Bold, fontSize = 20.sp)
+                        Spacer(modifier = Modifier.height(16.dp))
+                        Text("Manage Products", modifier = Modifier.clickable {
+                            navController.navigate("manage_products")
+                            coroutineScope.launch { viewModel.drawerState.close() }
+                        })
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text("Orders Manage", modifier = Modifier.clickable {
+                            coroutineScope.launch { viewModel.drawerState.close() }
+                        })
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text("User Manage", modifier = Modifier.clickable {
+                            coroutineScope.launch { viewModel.closeDrawer(coroutineScope) }
+                        })
+                        // Add more admin options here
+                    }
+                }
+            }
+        ) {
+            // Main content
+            HomeContent(modifier, navController, viewModel)
+        }
+    } else {
+        // Main content without drawer
+        HomeContent(modifier, navController, viewModel)
+    }
+}
+
+//Home Content
+@Composable
+fun HomeContent(modifier: Modifier, navController: NavHostController, viewModel: HomeViewModel) {
+    val coroutineScope = rememberCoroutineScope()
+
     Scaffold(
         bottomBar = { BottomNavigationBar(navController = navController) }
     ) { paddingValues ->
-
-        LazyColumn(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(paddingValues)
-        ) {
-            item {
-                // Hero banner area
-                HeroBanner()
-            }
-
-            item {
-                // New arrivals section
-                SectionHeader(
-                    title = "New",
-                    subtitle = "You've never seen it before!",
-                    showViewAll = true
-                )
-            }
-
-            item {
-                // New arrivals items
-                NewArrivalsSection()
-            }
-
-            item {
-                // Trending section
-                SectionHeader(
-                    title = "Trending",
-                    subtitle = "Popular this week",
-                    showViewAll = true
-                )
-            }
-
-            item {
-                // Trending items
-                TrendingSection()
-            }
-
-            item {
-                // Categories section
-                SectionHeader(
-                    title = "Categories",
-                    subtitle = "Find your style",
-                    showViewAll = false
-                )
-            }
-
-            item {
-                // Categories grid
-                CategoriesSection()
-            }
-
-            item {
-                // Popular brands section
-                SectionHeader(
-                    title = "Popular Brands",
-                    subtitle = "Top fashion houses",
-                    showViewAll = true
-                )
-            }
-
-            item {
-                // Brands section
-                BrandsSection()
-            }
-
-            item {
-                // Space at the bottom
-                Spacer(modifier = Modifier.height(16.dp))
+        Box(modifier = Modifier.fillMaxSize()) {
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(paddingValues)
+            ) {
+                item { HeroBanner() }
+                item { SectionHeader(title = "New", subtitle = "You've never seen it before!", showViewAll = true) }
+                item { NewArrivalsSection() }
+                item { SectionHeader(title = "Trending", subtitle = "Popular this week", showViewAll = true) }
+                item { TrendingSection() }
+                item { SectionHeader(title = "Categories", subtitle = "Find your style", showViewAll = false) }
+                item { CategoriesSection() }
+                item { SectionHeader(title = "Popular Brands", subtitle = "Top fashion houses", showViewAll = true) }
+                item { BrandsSection() }
+                item { Spacer(modifier = Modifier.height(16.dp)) }
             }
         }
     }
@@ -474,7 +487,14 @@ fun BottomNavigationBar(navController: NavHostController) {
                 unselectedTextColor = unSelectedColor,
                 indicatorColor = Color.Black // Để không có hiệu ứng nền khi chọn
             ),
-            onClick = { },
+            onClick = {
+                // Add navigation logic here
+                navController.navigate("favorites") {
+                    // Optional: Configure navigation options
+                    popUpTo(navController.graph.startDestinationId)
+                    launchSingleTop = true
+                }
+            },
             icon = { Icon(Icons.Filled.Favorite, contentDescription = "Favorites") },
             label = { Text("Favorites") }
         )
@@ -499,4 +519,5 @@ fun BottomNavigationBar(navController: NavHostController) {
         )
     }
 }
+
 

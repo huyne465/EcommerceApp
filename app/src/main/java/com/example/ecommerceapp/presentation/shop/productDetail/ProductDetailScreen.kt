@@ -249,7 +249,8 @@ fun ProductDetailScreen(
                             colors = ButtonDefaults.buttonColors(
                                 containerColor = MaterialTheme.colorScheme.primary
                             ),
-                            shape = RoundedCornerShape(12.dp)
+                            shape = RoundedCornerShape(12.dp),
+                            enabled = product.stock > 0
                         ) {
                             Icon(
                                 imageVector = Icons.Default.ShoppingCart,
@@ -257,7 +258,7 @@ fun ProductDetailScreen(
                             )
                             Spacer(modifier = Modifier.width(8.dp))
                             Text(
-                                text = "Add to Cart",
+                                text = if (product.stock > 0) "Add to Cart" else "Out of Stock",
                                 style = MaterialTheme.typography.titleMedium
                             )
                         }

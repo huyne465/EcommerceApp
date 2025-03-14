@@ -1,4 +1,4 @@
-package com.example.ecommerceapp.presentation.shop.productManage
+package com.example.ecommerceapp.presentation.admin.manageProduct
 
 import android.annotation.SuppressLint
 import androidx.compose.foundation.layout.*
@@ -7,6 +7,7 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
@@ -53,7 +54,7 @@ fun AddProductScreen(
                 title = { Text("Thêm sản phẩm mới") },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "Back")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
                     }
                 }
             )
@@ -144,6 +145,14 @@ fun AddProductScreen(
                 onValueChange = viewModel::onImageUrlChange,
                 label = { Text("URL hình ảnh") },
                 modifier = Modifier.fillMaxWidth()
+            )
+
+            OutlinedTextField(
+                value = uiState.stock,
+                onValueChange = viewModel::onStockChange,
+                label = { Text("Stock quantity") },
+                modifier = Modifier.fillMaxWidth(),
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
             )
 
             // Error message
