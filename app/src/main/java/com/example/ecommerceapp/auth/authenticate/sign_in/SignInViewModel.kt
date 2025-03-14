@@ -3,6 +3,7 @@ package com.example.ecommerceapp.auth.authenticate.sign_in
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.database.FirebaseDatabase
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -23,6 +24,8 @@ class SignInViewModel : ViewModel() {
 
     private val _uiState = MutableStateFlow(SignInUiState())
     val uiState: StateFlow<SignInUiState> = _uiState.asStateFlow()
+    private val database = FirebaseDatabase.getInstance("https://ecommerceapp-58b7f-default-rtdb.asia-southeast1.firebasedatabase.app")
+    private val usersRef = database.getReference("users")
 
     private val auth = FirebaseAuth.getInstance()
 
@@ -88,12 +91,31 @@ class SignInViewModel : ViewModel() {
                 _uiState.update { currentState ->
                     currentState.copy(
                         isLoading = true,
-                        errorMessage = "" // Xóa thông báo lỗi cũ nếu có
+                        errorMessage = ""
                     )
                 }
-                auth.signInWithEmailAndPassword(email, password).await()
 
-                // Đặt isSuccess = true và không đặt lại thành false ngay sau đó
+                val authResult = auth.signInWithEmailAndPassword(email, password).await()
+                val userId = authResult.user?.uid
+
+                // Check if user is banned
+                if (userId != null) {
+                    val userBanSnapshot = usersRef.child(userId).child("banned").get().await()
+                    val isBanned = userBanSnapshot.getValue(Boolean::class.java) ?: false
+
+                    if (isBanned) {
+                        // If banned, sign them out and show error
+                        auth.signOut()
+                        _uiState.update { currentState ->
+                            currentState.copy(
+                                isLoading = false,
+                                errorMessage = "Your account has been banned. Please contact support."
+                            )
+                        }
+                        return@launch
+                    }
+                }
+
                 _uiState.update { currentState ->
                     currentState.copy(
                         isSuccess = true,

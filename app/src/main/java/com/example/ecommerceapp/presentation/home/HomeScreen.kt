@@ -80,6 +80,7 @@ fun HomeScreen(
                         })
                         Spacer(modifier = Modifier.height(8.dp))
                         Text("User Manage", modifier = Modifier.clickable {
+                            navController.navigate("manage_users")
                             coroutineScope.launch { viewModel.closeDrawer(coroutineScope) }
                         })
                         // Add more admin options here

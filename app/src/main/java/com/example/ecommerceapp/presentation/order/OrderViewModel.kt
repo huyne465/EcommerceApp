@@ -8,6 +8,7 @@ import com.example.ecommerceapp.presentation.profile.UserAddress.AddressList.Add
 import com.example.ecommerceapp.zalopay.Api.CreateOrder
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.FirebaseDatabase
+import com.google.firebase.database.GenericTypeIndicator
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -229,11 +230,34 @@ class OrderViewModel : ViewModel() {
                                 // Update order status in Firebase
                                 viewModelScope.launch {
                                     try {
+                                        // Update order status to PAID
                                         ordersRef.child(userId).child(orderId).child("status").setValue("PAID").await()
                                         ordersRef.child(userId).child(orderId).child("paymentDetails").setValue(mapOf(
                                             "transactionId" to transactionId,
                                             "paymentTime" to Date().time
                                         )).await()
+
+                                        // Update product stock quantities
+                                        val orderSnapshot = ordersRef.child(userId).child(orderId).child("items").get().await()
+                                        val productsRef = database.getReference("products")
+
+                                        for (itemSnapshot in orderSnapshot.children) {
+                                            val item = itemSnapshot.getValue(object : GenericTypeIndicator<Map<String, Any>>() {})
+                                            if (item != null) {
+                                                val productId = item["productId"] as? String
+                                                val quantity = (item["quantity"] as? Long)?.toInt() ?: 1
+
+                                                if (productId != null) {
+                                                    // Get current stock and decrement it
+                                                    val productSnapshot = productsRef.child(productId).get().await()
+                                                    val currentStock = productSnapshot.child("stock").getValue(Int::class.java) ?: 0
+                                                    val newStock = maxOf(0, currentStock - quantity)
+
+                                                    // Update the stock
+                                                    productsRef.child(productId).child("stock").setValue(newStock).await()
+                                                }
+                                            }
+                                        }
 
                                         _uiState.update {
                                             it.copy(

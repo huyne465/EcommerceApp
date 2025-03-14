@@ -40,6 +40,7 @@ import HomeScreen
 import androidx.compose.material.ExperimentalMaterialApi
 import com.example.ecommerceapp.presentation.admin.manageProduct.EditProductScreen
 import com.example.ecommerceapp.presentation.admin.manageProduct.ManageProductScreen
+import com.example.ecommerceapp.presentation.manageUser.ManageUserScreen
 
 @OptIn(ExperimentalMaterialApi::class)
 @RequiresApi(Build.VERSION_CODES.O)
@@ -235,6 +236,11 @@ fun AppNavigation(
         ) { backStackEntry ->
             val productId = backStackEntry.arguments?.getString("productId") ?: ""
             EditProductScreen(navController = navController, productId = productId)
+        }
+
+        //user manage
+        composable("manage_users") {
+            ManageUserScreen(navController = navController)
         }
 
 

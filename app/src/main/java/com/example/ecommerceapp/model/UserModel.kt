@@ -9,8 +9,12 @@ data class UserModel(
     val name: String = "",
     val password: String = "",
     val confirmPassword: String ="",
-    val createdAt: String = getCurrentFormattedDate()
+    val createdAt: String = getCurrentFormattedDate(),
+    var id: String = "",
+    var photoUrl: String = "",
+    val banned: Boolean = false
 )
+
 
 // Hàm lấy thời gian hiện tại dưới dạng chuỗi
 fun getCurrentFormattedDate(): String {
