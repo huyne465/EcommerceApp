@@ -41,6 +41,7 @@ import androidx.compose.material.ExperimentalMaterialApi
 import com.example.ecommerceapp.presentation.admin.manageProduct.EditProductScreen
 import com.example.ecommerceapp.presentation.admin.manageProduct.ManageProductScreen
 import com.example.ecommerceapp.presentation.manageUser.ManageUserScreen
+import com.example.ecommerceapp.presentation.revenueManage.RevenueManageScreen
 
 @OptIn(ExperimentalMaterialApi::class)
 @RequiresApi(Build.VERSION_CODES.O)
@@ -241,6 +242,11 @@ fun AppNavigation(
         //user manage
         composable("manage_users") {
             ManageUserScreen(navController = navController)
+        }
+
+        //Revenue management
+        composable("revenue_manage") {
+            RevenueManageScreen(navController = navController)
         }
 
 

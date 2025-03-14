@@ -1,7 +1,7 @@
 package com.example.ecommerceapp.model
 
 data class Order(
-    val orderId: String,
+    var orderId: String,
     val items: List<OrderItem>,
     val paymentDetails: PaymentDetails,
     val shippingAddress: ShippingAddress,

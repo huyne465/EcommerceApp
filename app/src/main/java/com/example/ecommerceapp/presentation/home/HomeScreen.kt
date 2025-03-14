@@ -83,7 +83,11 @@ fun HomeScreen(
                             navController.navigate("manage_users")
                             coroutineScope.launch { viewModel.closeDrawer(coroutineScope) }
                         })
-                        // Add more admin options here
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text("Revenue Manage", modifier = Modifier.clickable {
+                            navController.navigate("revenue_manage")
+                            coroutineScope.launch { viewModel.closeDrawer(coroutineScope) }
+                        })
                     }
                 }
             }

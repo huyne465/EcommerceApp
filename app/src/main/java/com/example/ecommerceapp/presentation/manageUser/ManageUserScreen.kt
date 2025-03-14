@@ -158,9 +158,9 @@ fun UserItem(
                     }
 
                     if (imageData != null) {
-                        // Use Coil for URL-based images
+                        // Use the decoded bitmap directly
                         Image(
-                            painter = rememberAsyncImagePainter(user.photoUrl),
+                            bitmap = imageData,
                             contentDescription = "Profile Picture",
                             modifier = Modifier.fillMaxSize(),
                             contentScale = ContentScale.Crop
