@@ -10,7 +10,8 @@ data class Order(
     val subtotal: Double = 0.0,
     val tax: Double = 0.0,
     val total: Double,
-    val timestamp: Long = 0
+    val timestamp: Long = 0,
+    val adminConfirmed: Boolean = false
 )
 
 data class OrderItem(

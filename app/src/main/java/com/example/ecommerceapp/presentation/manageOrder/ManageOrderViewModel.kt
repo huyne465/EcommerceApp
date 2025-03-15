@@ -81,14 +81,39 @@ class ManageOrderViewModel : ViewModel() {
     fun confirmOrder(order: Order) {
         viewModelScope.launch {
             try {
-                // Update order status in Firebase
+                // Extract the userId from the parentPath
+                val orderPath = database.reference
+                    .child("orders")
+                    .get()
+                    .await()
+
+                // Find the user ID that contains this order
+                var userId: String? = null
+                for (userSnapshot in orderPath.children) {
+                    if (userSnapshot.child(order.orderId).exists()) {
+                        userId = userSnapshot.key
+                        break
+                    }
+                }
+
+                if (userId == null) {
+                    Log.e("ManageOrderViewModel", "Could not find user for order: ${order.orderId}")
+                    _uiState.update {
+                        it.copy(errorMessage = "Failed to confirm order: User not found")
+                    }
+                    return@launch
+                }
+
+                // Update adminConfirmed to true
                 database.reference
                     .child("orders")
-                    .child(order.paymentDetails.toString()) // Assuming paymentDetails contains userId
+                    .child(userId)
                     .child(order.orderId)
-                    .child("status")
-                    .setValue("CONFIRMED")
+                    .child("adminConfirmed")
+                    .setValue(true)
                     .await()
+
+                Log.d("ManageOrderViewModel", "Order ${order.orderId} confirmed by admin")
 
                 // Reload pending orders
                 loadPendingOrders()

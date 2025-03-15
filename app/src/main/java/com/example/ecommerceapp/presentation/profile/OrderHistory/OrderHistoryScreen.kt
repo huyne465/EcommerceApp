@@ -489,7 +489,7 @@ fun ErrorState(message: String) {
 
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
-fun OrdersList(orders: List<Order>, navController: NavHostController) {
+fun OrdersList(orders: List<Order>, navController: NavHostController, viewModel: OrderHistoryViewModel = viewModel()) {
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
         contentPadding = PaddingValues(16.dp),
@@ -499,6 +499,7 @@ fun OrdersList(orders: List<Order>, navController: NavHostController) {
             OrderCard(
                 order,
                 onClick = { navController.navigate("order_detail/${order.orderId}") },
+                onMarkAsReceived = { orderId -> viewModel.markOrderAsReceived(orderId) },
             )
         }
     }
@@ -623,12 +624,16 @@ fun OrderCard(
                     Row(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        // Mark as Received button (only shown for PENDING orders)
+                        // Mark as Received button (only shown for PENDING orders that are admin confirmed)
                         if (order.status == "PENDING") {
+                            val canMarkAsReceived = order.adminConfirmed == true
+
                             FilledTonalButton(
                                 onClick = { onMarkAsReceived(order.orderId) },
+                                enabled = canMarkAsReceived,
                                 colors = ButtonDefaults.filledTonalButtonColors(
-                                    containerColor = MaterialTheme.colorScheme.secondaryContainer
+                                    containerColor = MaterialTheme.colorScheme.secondary,
+                                    disabledContainerColor = Color.LightGray
                                 )
                             ) {
                                 Text(

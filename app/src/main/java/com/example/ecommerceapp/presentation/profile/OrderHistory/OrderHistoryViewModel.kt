@@ -52,6 +52,74 @@ class OrderHistoryViewModel : ViewModel() {
         }
     }
 
+    //mark as received function after admin confirmation -> stock update
+    fun markOrderAsReceived(orderId: String) {
+        viewModelScope.launch {
+            try {
+                val userId = auth.currentUser?.uid ?: return@launch
+                Log.d("OrderHistoryViewModel", "Marking order $orderId as received")
+
+                // First check if the order has been confirmed by admin
+                val orderSnapshot = database.reference
+                    .child("orders")
+                    .child(userId)
+                    .child(orderId)
+                    .get()
+                    .await()
+
+                val adminConfirmed = orderSnapshot.child("adminConfirmed").getValue(Boolean::class.java) ?: false
+
+                if (!adminConfirmed) {
+                    Log.d("OrderHistoryViewModel", "Order $orderId not yet confirmed by admin")
+                    _uiState.value = OrderHistoryUiState(
+                        orders = _uiState.value.orders,
+                        errorMessage = "Cannot mark as received: Order not yet confirmed by admin"
+                    )
+                    return@launch
+                }
+
+                // Update product stock quantities
+                val itemsSnapshot = orderSnapshot.child("items")
+                val productsRef = database.reference.child("products")
+
+                for (itemSnapshot in itemsSnapshot.children) {
+                    val productId = itemSnapshot.child("productId").getValue(String::class.java) ?: continue
+                    val quantity = itemSnapshot.child("quantity").getValue(Int::class.java) ?: 1
+
+
+                    // Get current stock for the specific size and decrement it
+                    val sizeStockRef = productsRef.child(productId).child("stock")
+                    val currentStock = sizeStockRef.get().await().getValue(Int::class.java) ?: 0
+                    val newStock = maxOf(0, currentStock - quantity)
+
+                    // Update the stock
+                    sizeStockRef.setValue(newStock).await()
+
+                    Log.d("OrderHistoryViewModel", "Updated stock for product $productId, $currentStock → $newStock")
+                }
+
+                // Update order status to PAID only if admin has confirmed
+                database.reference
+                    .child("orders")
+                    .child(userId)
+                    .child(orderId)
+                    .child("status")
+                    .setValue("PAID")
+                    .await()
+
+                Log.d("OrderHistoryViewModel", "Order $orderId marked as received, reloading orders")
+
+                // Reload orders to reflect the update
+                loadOrders()
+            } catch (e: Exception) {
+                Log.e("OrderHistoryViewModel", "Error marking order as received", e)
+                _uiState.value = OrderHistoryUiState(
+                    orders = _uiState.value.orders,
+                    errorMessage = "Failed to update order: ${e.message}"
+                )
+            }
+        }
+    }
 
 
     fun loadOrders() {
@@ -146,6 +214,7 @@ class OrderHistoryViewModel : ViewModel() {
             val tax = snapshot.child("tax").getValue(Double::class.java) ?: 0.0
             val total = snapshot.child("total").getValue(Double::class.java) ?: 0.0
             val timestamp = snapshot.child("timestamp").getValue(Long::class.java) ?: 0
+            val adminConfirmed = snapshot.child("adminConfirmed").getValue(Boolean::class.java) ?: false
 
             return Order(
                 orderId = orderId,
@@ -157,7 +226,8 @@ class OrderHistoryViewModel : ViewModel() {
                 subtotal = subtotal,
                 tax = tax,
                 total = total,
-                timestamp = timestamp
+                timestamp = timestamp,
+                adminConfirmed = adminConfirmed
             )
         } catch (e: Exception) {
             Log.e("OrderHistoryViewModel", "Error parsing order: ${snapshot.key}", e)
@@ -165,30 +235,6 @@ class OrderHistoryViewModel : ViewModel() {
         }
     }
 }
-
-//// Add this function to your existing OrderHistoryViewModel
-//fun markOrderAsReceived(orderId: String) {
-//    viewModelScope.launch {
-//        try {
-//            val userId = auth.currentUser?.uid ?: return@launch
-//
-//            // Update order status to PAID
-//            database.reference
-//                .child("orders")
-//                .child(userId)
-//                .child(orderId)
-//                .child("status")
-//                .setValue("PAID")
-//                .await()
-//
-//            // Reload orders to reflect the update
-//            loadOrders()
-//        } catch (e: Exception) {
-//            Log.e("OrderHistoryViewModel", "Error marking order as received", e)
-//            _uiState.value = OrderHistoryUiState(errorMessage = "Failed to update order: ${e.message}")
-//        }
-//    }
-//}
 
 data class OrderHistoryUiState(
     val orders: List<Order> = emptyList(),
