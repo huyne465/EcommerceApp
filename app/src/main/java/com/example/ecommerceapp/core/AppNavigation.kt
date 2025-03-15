@@ -40,6 +40,7 @@ import HomeScreen
 import androidx.compose.material.ExperimentalMaterialApi
 import com.example.ecommerceapp.presentation.admin.manageProduct.EditProductScreen
 import com.example.ecommerceapp.presentation.admin.manageProduct.ManageProductScreen
+import com.example.ecommerceapp.presentation.manageOrder.ManageOrderScreen
 import com.example.ecommerceapp.presentation.manageUser.ManageUserScreen
 import com.example.ecommerceapp.presentation.revenueManage.RevenueManageScreen
 
@@ -247,6 +248,11 @@ fun AppNavigation(
         //Revenue management
         composable("revenue_manage") {
             RevenueManageScreen(navController = navController)
+        }
+
+        //Orders management
+        composable("manage_orders") {
+            ManageOrderScreen(navController = navController)
         }
 
 

@@ -76,6 +76,7 @@ fun HomeScreen(
                         })
                         Spacer(modifier = Modifier.height(8.dp))
                         Text("Orders Manage", modifier = Modifier.clickable {
+                            navController.navigate("manage_orders")
                             coroutineScope.launch { viewModel.drawerState.close() }
                         })
                         Spacer(modifier = Modifier.height(8.dp))

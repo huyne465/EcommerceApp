@@ -1,4 +1,4 @@
-package com.example.ecommerceapp.presentation.profile.OrderHistory
+package com.example.ecommerceapp.presentation.manageOrder
 
 import android.util.Log
 import androidx.lifecycle.ViewModel
@@ -12,80 +12,97 @@ import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.FirebaseDatabase
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 
-class OrderHistoryViewModel : ViewModel() {
-    // Match the same database instance used in OrderViewModel
+data class ManageOrderUiState(
+    val isLoading: Boolean = false,
+    val pendingOrders: List<Order> = emptyList(),
+    val errorMessage: String? = null
+)
+
+class ManageOrderViewModel : ViewModel() {
     private val database = FirebaseDatabase.getInstance("https://ecommerceapp-58b7f-default-rtdb.asia-southeast1.firebasedatabase.app")
-    private val auth = FirebaseAuth.getInstance()
 
-    // Add sort order state
-    enum class SortOrder {
-        NEWEST_FIRST, OLDEST_FIRST
-    }
-
-    private val _uiState = MutableStateFlow(OrderHistoryUiState())
-    val uiState: StateFlow<OrderHistoryUiState> = _uiState
-
-    // Track current sort order
-    private val _sortOrder = MutableStateFlow(SortOrder.NEWEST_FIRST)
-    val sortOrder: StateFlow<SortOrder> = _sortOrder
+    private val _uiState = MutableStateFlow(ManageOrderUiState())
+    val uiState: StateFlow<ManageOrderUiState> = _uiState.asStateFlow()
 
     init {
-        loadOrders()
+        loadPendingOrders()
     }
 
-    // Function to toggle sort order
-    fun toggleSortOrder() {
-        _sortOrder.value = when (_sortOrder.value) {
-            SortOrder.NEWEST_FIRST -> SortOrder.OLDEST_FIRST
-            SortOrder.OLDEST_FIRST -> SortOrder.NEWEST_FIRST
-        }
-    }
-
-    // Function to apply sort
-    fun sortOrders(orders: List<Order>): List<Order> {
-        return when (_sortOrder.value) {
-            SortOrder.NEWEST_FIRST -> orders.sortedByDescending { it.timestamp }
-            SortOrder.OLDEST_FIRST -> orders.sortedBy { it.timestamp }
-        }
-    }
-
-
-
-    fun loadOrders() {
+    fun loadPendingOrders() {
         viewModelScope.launch {
             try {
-                val userId = auth.currentUser?.uid ?: return@launch
-                Log.d("OrderHistoryViewModel", "Loading orders for user: $userId")
+                _uiState.update { it.copy(isLoading = true) }
 
-                // Navigate to orders > userId node
+                // Get all orders from all users
                 val snapshot = database.reference
                     .child("orders")
-                    .child(userId)
                     .get()
                     .await()
 
-                Log.d("OrderHistoryViewModel", "Got snapshot with ${snapshot.childrenCount} orders")
+                val pendingOrders = mutableListOf<Order>()
 
-                val orders = mutableListOf<Order>()
-                for (orderSnapshot in snapshot.children) {
-                    // Include all orders or filter as needed
-                    // You might want to show all orders regardless of status
-                    parseOrder(orderSnapshot)?.let {
-                        orders.add(it)
-                        Log.d("OrderHistoryViewModel", "Added order: ${orderSnapshot.key} with status: ${it.status}")
+                // First level: user IDs
+                for (userSnapshot in snapshot.children) {
+                    // Second level: order IDs
+                    for (orderSnapshot in userSnapshot.children) {
+                        // Only include PENDING orders
+                        val status = orderSnapshot.child("status").getValue(String::class.java)
+                        if (status == "PENDING") {
+                            parseOrder(orderSnapshot)?.let {
+                                pendingOrders.add(it)
+                            }
+                        }
                     }
                 }
 
-                _uiState.value = OrderHistoryUiState(orders)
-                Log.d("OrderHistoryViewModel", "Updated UI state with ${orders.size} orders")
+                _uiState.update {
+                    it.copy(
+                        isLoading = false,
+                        pendingOrders = pendingOrders
+                    )
+                }
             } catch (e: Exception) {
-                Log.e("OrderHistoryViewModel", "Error loading orders", e)
-                _uiState.value = OrderHistoryUiState(errorMessage = "Failed to load orders: ${e.message}")
+                Log.e("ManageOrderViewModel", "Error loading pending orders", e)
+                _uiState.update {
+                    it.copy(
+                        isLoading = false,
+                        errorMessage = "Failed to load pending orders: ${e.message}"
+                    )
+                }
             }
         }
+    }
+
+    fun confirmOrder(order: Order) {
+        viewModelScope.launch {
+            try {
+                // Update order status in Firebase
+                database.reference
+                    .child("orders")
+                    .child(order.paymentDetails.toString()) // Assuming paymentDetails contains userId
+                    .child(order.orderId)
+                    .child("status")
+                    .setValue("CONFIRMED")
+                    .await()
+
+                // Reload pending orders
+                loadPendingOrders()
+            } catch (e: Exception) {
+                Log.e("ManageOrderViewModel", "Error confirming order", e)
+                _uiState.update {
+                    it.copy(errorMessage = "Failed to confirm order: ${e.message}")
+                }
+            }
+        }
+    }
+
+    fun clearErrorMessage() {
+        _uiState.update { it.copy(errorMessage = null) }
     }
 
     private fun parseOrder(snapshot: DataSnapshot): Order? {
@@ -109,28 +126,26 @@ class OrderHistoryViewModel : ViewModel() {
             // Get status - this is mandatory
             val status = snapshot.child("status").getValue(String::class.java) ?: "UNKNOWN"
 
-            // Handle payment details more flexibly as they might not exist for all orders
+
+            // Handle payment details
             val paymentDetailsSnapshot = snapshot.child("paymentDetails")
             val paymentDetails = if (paymentDetailsSnapshot.exists()) {
                 val paymentTime = paymentDetailsSnapshot.child("paymentTime").getValue(Long::class.java) ?: 0
                 val transactionId = paymentDetailsSnapshot.child("transactionId").getValue(String::class.java) ?: ""
-                // Try to get payment method from different locations since OrderViewModel stores it differently
                 val paymentMethod = paymentDetailsSnapshot.child("paymentMethod").getValue(String::class.java)
                     ?: snapshot.child("paymentMethod").getValue(String::class.java) ?: "N/A"
                 PaymentDetails(paymentTime, transactionId, paymentMethod)
             } else {
-                // Fall back to getting just the payment method from the root node
                 val paymentMethod = snapshot.child("paymentMethod").getValue(String::class.java) ?: "UNKNOWN"
                 PaymentDetails(0, "", paymentMethod)
             }
 
-            // Handle shipping address more flexibly
+            // Handle shipping address
             val shippingAddressSnapshot = snapshot.child("shippingAddress")
             val shippingAddress = if (shippingAddressSnapshot.exists()) {
                 val address = shippingAddressSnapshot.child("address").getValue(String::class.java) ?: "N/A"
                 val city = shippingAddressSnapshot.child("city").getValue(String::class.java) ?: "N/A"
                 val fullName = shippingAddressSnapshot.child("fullName").getValue(String::class.java) ?: "N/A"
-                // Create a more complete shipping address object
                 ShippingAddress(
                     address = address,
                     city = city,
@@ -160,37 +175,16 @@ class OrderHistoryViewModel : ViewModel() {
                 timestamp = timestamp
             )
         } catch (e: Exception) {
-            Log.e("OrderHistoryViewModel", "Error parsing order: ${snapshot.key}", e)
+            Log.e("ManageOrderViewModel", "Error parsing order: ${snapshot.key}", e)
             return null
         }
     }
 }
 
-//// Add this function to your existing OrderHistoryViewModel
-//fun markOrderAsReceived(orderId: String) {
-//    viewModelScope.launch {
-//        try {
-//            val userId = auth.currentUser?.uid ?: return@launch
-//
-//            // Update order status to PAID
-//            database.reference
-//                .child("orders")
-//                .child(userId)
-//                .child(orderId)
-//                .child("status")
-//                .setValue("PAID")
-//                .await()
-//
-//            // Reload orders to reflect the update
-//            loadOrders()
-//        } catch (e: Exception) {
-//            Log.e("OrderHistoryViewModel", "Error marking order as received", e)
-//            _uiState.value = OrderHistoryUiState(errorMessage = "Failed to update order: ${e.message}")
-//        }
-//    }
-//}
-
-data class OrderHistoryUiState(
-    val orders: List<Order> = emptyList(),
-    val errorMessage: String? = null
+// Add userId field to PaymentDetails
+data class PaymentDetails(
+    val paymentTime: Long = 0,
+    val transactionId: String = "",
+    val paymentMethod: String = "",
+    val userId: String = ""
 )

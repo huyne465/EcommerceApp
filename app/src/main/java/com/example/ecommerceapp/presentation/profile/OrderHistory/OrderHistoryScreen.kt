@@ -496,16 +496,21 @@ fun OrdersList(orders: List<Order>, navController: NavHostController) {
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         items(orders) { order ->
-            OrderCard(order) {
-                navController.navigate("order_detail/${order.orderId}")
-            }
+            OrderCard(
+                order,
+                onClick = { navController.navigate("order_detail/${order.orderId}") },
+            )
         }
     }
 }
 
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
-fun OrderCard(order: Order, onClick: () -> Unit) {
+fun OrderCard(
+    order: Order,
+    onClick: () -> Unit,
+    onMarkAsReceived: (String) -> Unit = {}
+) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -566,8 +571,6 @@ fun OrderCard(order: Order, onClick: () -> Unit) {
                             overflow = TextOverflow.Ellipsis
                         )
 
-
-
                         Text(
                             text = "× $totalItems",
                             style = MaterialTheme.typography.bodyMedium,
@@ -575,7 +578,9 @@ fun OrderCard(order: Order, onClick: () -> Unit) {
                         )
                     }
                 }
+
                 Spacer(modifier = Modifier.height(13.dp))
+
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
@@ -593,7 +598,7 @@ fun OrderCard(order: Order, onClick: () -> Unit) {
 
                 Spacer(modifier = Modifier.height(13.dp))
 
-                // Total price and view details button
+                // Total price and action buttons
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
@@ -614,23 +619,46 @@ fun OrderCard(order: Order, onClick: () -> Unit) {
                         )
                     }
 
-                    TextButton(
-                        onClick = onClick,
-                        colors = ButtonDefaults.textButtonColors(
-                            contentColor = MaterialTheme.colorScheme.primary
-                        )
+                    // Button row
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Text(
-                            "View Details",
-                            style = MaterialTheme.typography.bodyMedium,
-                            fontWeight = FontWeight.SemiBold
-                        )
-                        Spacer(modifier = Modifier.width(4.dp))
-                        Icon(
-                            Icons.AutoMirrored.Filled.ArrowForward,
-                            contentDescription = null,
-                            modifier = Modifier.size(18.dp)
-                        )
+                        // Mark as Received button (only shown for PENDING orders)
+                        if (order.status == "PENDING") {
+                            FilledTonalButton(
+                                onClick = { onMarkAsReceived(order.orderId) },
+                                colors = ButtonDefaults.filledTonalButtonColors(
+                                    containerColor = MaterialTheme.colorScheme.secondaryContainer
+                                )
+                            ) {
+                                Text(
+                                    "Mark as Received",
+                                    style = MaterialTheme.typography.labelMedium
+                                )
+                            }
+
+                            Spacer(modifier = Modifier.width(8.dp))
+                        }
+
+                        // View Details button
+                        TextButton(
+                            onClick = onClick,
+                            colors = ButtonDefaults.textButtonColors(
+                                contentColor = MaterialTheme.colorScheme.primary
+                            )
+                        ) {
+                            Text(
+                                "View Details",
+                                style = MaterialTheme.typography.bodyMedium,
+                                fontWeight = FontWeight.SemiBold
+                            )
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Icon(
+                                Icons.AutoMirrored.Filled.ArrowForward,
+                                contentDescription = null,
+                                modifier = Modifier.size(18.dp)
+                            )
+                        }
                     }
                 }
             }
