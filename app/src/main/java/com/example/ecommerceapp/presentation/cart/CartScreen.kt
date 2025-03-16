@@ -18,6 +18,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import coil.compose.AsyncImage
@@ -161,11 +162,32 @@ fun CartScreen(
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.Center
                 ) {
+                    Icon(
+                        imageVector = Icons.Default.Warning,
+                        contentDescription = null,
+                        modifier = Modifier.size(48.dp),
+                        tint = MaterialTheme.colorScheme.error
+                    )
+                    Spacer(modifier = Modifier.height(16.dp))
                     Text(
                         text = uiState.errorMessage ?: "Unknown error",
                         color = MaterialTheme.colorScheme.error,
                         textAlign = TextAlign.Center
                     )
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Button(
+                        onClick = { viewModel.loadCartItems()},
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = MaterialTheme.colorScheme.error
+                        )
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Refresh,
+                            contentDescription = "Retry"
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text("Try Again")
+                    }
                 }
             } else if (uiState.cartItems.isEmpty()) {
                 Column(
@@ -238,10 +260,14 @@ fun CartScreen(
                             CartItemCard(
                                 cartItem = cartItem,
                                 onQuantityIncrease = {
-                                    viewModel.updateQuantity(
-                                        cartItem,
-                                        cartItem.quantity + 1
-                                    )
+                                    viewModel.validateStock(cartItem)
+                                    // Only update quantity if stock is available
+                                    if (cartItem.quantity < (uiState.stock ?: 0) || uiState.stock == 0) {
+                                        viewModel.updateQuantity(
+                                            cartItem,
+                                            cartItem.quantity + 1
+                                        )
+                                    }
                                 },
                                 onQuantityDecrease = {
                                     viewModel.updateQuantity(

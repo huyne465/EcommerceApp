@@ -29,10 +29,14 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
+import com.example.ecommerceapp.model.CartItem
 import com.example.ecommerceapp.model.MediaType
 import com.example.ecommerceapp.model.ProductComment
+import kotlinx.coroutines.launch
+import okhttp3.internal.wait
 
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -90,24 +94,6 @@ fun ProductDetailScreen(
                 CircularProgressIndicator(
                     modifier = Modifier.align(Alignment.Center)
                 )
-            } else if (uiState.errorMessage != null) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(16.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.Center
-                ) {
-                    Text(
-                        text = uiState.errorMessage ?: "Unknown error",
-                        color = MaterialTheme.colorScheme.error,
-                        textAlign = TextAlign.Center
-                    )
-                    Spacer(modifier = Modifier.height(16.dp))
-                    Button(onClick = { viewModel.loadProduct() }) {
-                        Text("Retry")
-                    }
-                }
             } else {
                 uiState.product?.let { product ->
                     Column(
@@ -151,7 +137,7 @@ fun ProductDetailScreen(
                         // Rating Section
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
-                            modifier = Modifier.clickable(onClick = { showRatingDialog = true })
+                            modifier = Modifier.fillMaxWidth()
                         ) {
                             // Display stars based on rating
                             repeat(5) { index ->
@@ -160,7 +146,7 @@ fun ProductDetailScreen(
                                     imageVector = if (isFilled) Icons.Default.Star else Icons.Outlined.StarOutline,
                                     contentDescription = null,
                                     tint = if (isFilled) Color(0xFFFFD700) else Color.LightGray,
-                                    modifier = Modifier.size(24.dp)
+                                    modifier = Modifier.size(24.dp),
                                 )
                             }
                             Spacer(modifier = Modifier.width(8.dp))
@@ -218,9 +204,29 @@ fun ProductDetailScreen(
                         // Quantity Selector
                         QuantitySelector(
                             quantity = uiState.quantity,
-                            onIncrement = { viewModel.incrementQuantity() },
-                            onDecrement = { viewModel.decrementQuantity() }
+                            onIncrement = {
+                                viewModel.incrementQuantity()
+                                // Wait for 2 seconds then clear the action message
+                                kotlinx.coroutines.MainScope().launch {
+                                    kotlinx.coroutines.delay(2000)
+                                    viewModel.clearActionMessage()
+                                }
+                            },
+                            onDecrement = {
+                                viewModel.decrementQuantity()
+                            }
                         )
+
+                        // Error message below Quantity Selector
+                        if (!uiState.errorMessage.isNullOrEmpty()) {
+                            Text(
+                                text = uiState.errorMessage!!,
+                                color = Color.Red,
+                                fontSize = 14.sp,
+                                modifier = Modifier.padding(bottom = 16.dp)
+                            )
+                        }
+
 
                         Spacer(modifier = Modifier.height(24.dp))
 
@@ -330,21 +336,6 @@ fun ProductDetailScreen(
                         }
                     }
                 }
-
-
-                // Show snackbar for actions
-                if (uiState.actionMessage != null) {
-                    Snackbar(
-                        modifier = Modifier
-                            .padding(16.dp)
-                            .align(Alignment.BottomCenter)
-                    ) {
-                        Text(text = uiState.actionMessage ?: "")
-                    }
-                    LaunchedEffect(uiState.actionMessage) {
-                        viewModel.clearActionMessage()
-                    }
-                }
             }
         }
     }
@@ -394,7 +385,9 @@ fun QuantitySelector(
                 modifier = Modifier.padding(horizontal = 8.dp)
             )
 
-            IconButton(onClick = onIncrement) {
+            IconButton(
+                onClick = onIncrement,
+            ) {
                 Icon(
                     imageVector = Icons.Default.Add,
                     contentDescription = "Increase quantity"
@@ -413,8 +406,6 @@ fun RatingDialog(
     var selectedRating by remember { mutableIntStateOf(currentRating) }
     var comment by remember { mutableStateOf("") }
     var selectedMediaUris by remember { mutableStateOf<List<Uri>>(emptyList()) }
-    val scrollState = rememberScrollState()
-    var showRatingDialog by remember { mutableStateOf(false) }
 
     // Image/video picker launcher
     val mediaPickerLauncher = rememberLauncherForActivityResult(
@@ -518,7 +509,8 @@ fun RatingDialog(
                                 // Delete button overlay
                                 IconButton(
                                     onClick = {
-                                        selectedMediaUris = selectedMediaUris.filterNot { it == uri }
+                                        selectedMediaUris =
+                                            selectedMediaUris.filterNot { it == uri }
                                     },
                                     modifier = Modifier
                                         .size(24.dp)

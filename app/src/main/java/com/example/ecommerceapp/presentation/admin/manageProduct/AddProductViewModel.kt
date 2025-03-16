@@ -25,7 +25,8 @@ class AddProductViewModel : ViewModel() {
         val isLoading: Boolean = false,
         val errorMessage: String? = null,
         val isSuccess: Boolean = false,
-        val selectedCategory: String = ""
+        val selectedCategory: String = "",
+        val buyCount: Int = 0
     )
 
     private val _uiState = MutableStateFlow(AddProductUiState())
@@ -237,7 +238,8 @@ class AddProductViewModel : ViewModel() {
                     rating = 0,
                     reviewCount = 0,
                     isFavorite = false,
-                    stock = stock
+                    stock = stock,
+                    buyCount = 0
                 )
 
                 // Add to Firebase Realtime Database
@@ -255,7 +257,8 @@ class AddProductViewModel : ViewModel() {
                         brand = "",
                         stock = " ",
                         category = "",
-                        selectedCategory = ""
+                        selectedCategory = "",
+                        buyCount = 0
                     )
                 }
             } catch (e: Exception) {

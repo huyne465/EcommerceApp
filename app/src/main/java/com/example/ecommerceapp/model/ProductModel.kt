@@ -14,4 +14,5 @@ data class Product(
     val imageUrl: String = "",
     val category: String? = null,
     var isFavorite: Boolean = false,
+    val buyCount: Int = 0
 )

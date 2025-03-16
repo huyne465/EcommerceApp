@@ -42,7 +42,8 @@ class ProductDetailViewModel(application: Application,private val productId: Str
         val quantity: Int = 1,
         val actionMessage: String? = null,
         val comments: List<ProductComment> = emptyList(),
-        val selectedSize: String? = null // Add selected size
+        val selectedSize: String? = null, // Add selected size
+        val stock: Int = 0
     )
 
     private val _uiState = MutableStateFlow(ProductDetailUiState())
@@ -80,8 +81,78 @@ class ProductDetailViewModel(application: Application,private val productId: Str
         }
     }
 
+    fun validatePickedSize(): Boolean {
+        val selectedSize = _uiState.value.selectedSize
+        if (selectedSize == null) {
+            _uiState.update {
+                it.copy(errorMessage = "Please select a size")
+            }
+            return false
+        }
+        return true
+    }
+
     fun selectSize(size: String) {
         _uiState.update { it.copy(selectedSize = size) }
+    }
+
+
+    fun validateStock(): Boolean {
+        val product = _uiState.value.product ?: return false
+        val quantity = _uiState.value.quantity
+        val stock = _uiState.value.stock
+
+        // Direct comparison with current known stock value
+        if (quantity > stock) {
+            _uiState.update {
+                it.copy(
+                    errorMessage = "Not enough stock available. Only $stock items left."
+                )
+            }
+            return false
+        } else {
+            _uiState.update {
+                it.copy(errorMessage = null)
+            }
+            return true
+        }
+    }
+
+    // Separate function to fetch current stock from Firebase
+    fun refreshStockData(onComplete: ((Int) -> Unit)? = null) {
+        viewModelScope.launch {
+            try {
+                val stockSnapshot = productsRef.child(productId).child("stock").get().await()
+                val stock = stockSnapshot.getValue(Int::class.java) ?: 0
+
+                _uiState.update {
+                    it.copy(stock = stock)
+                }
+
+                // Re-validate with new stock data
+                validateStock()
+
+                // Call the completion handler if provided
+                onComplete?.invoke(stock)
+            } catch (e: Exception) {
+                Log.e("ProductDetailViewModel", "Error refreshing stock: ${e.message}")
+            }
+        }
+    }
+
+    fun incrementQuantity() {
+        // First refresh stock data from server, then proceed with quantity update
+        refreshStockData { currentStock ->
+            val currentQuantity = _uiState.value.quantity
+
+            if (currentQuantity < currentStock) {
+                _uiState.update { it.copy(quantity = it.quantity + 1) }
+            } else {
+                _uiState.update {
+                    it.copy(errorMessage = "Cannot add more items. Available stock is $currentStock.")
+                }
+            }
+        }
     }
 
     // Function to load comments for this product
@@ -296,9 +367,6 @@ class ProductDetailViewModel(application: Application,private val productId: Str
         })
     }
 
-    fun incrementQuantity() {
-        _uiState.update { it.copy(quantity = it.quantity + 1) }
-    }
 
     fun decrementQuantity() {
         if (_uiState.value.quantity > 1) {
@@ -355,6 +423,9 @@ class ProductDetailViewModel(application: Application,private val productId: Str
     }
 
     fun addToCart() {
+        if (!validatePickedSize()) {
+            return
+        }
         val product = _uiState.value.product ?: return
         val quantity = _uiState.value.quantity
         val selectedSize = _uiState.value.selectedSize ?: return

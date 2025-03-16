@@ -29,7 +29,8 @@ class CartViewModel : ViewModel() {
         val tax: Double = 0.0,
         val shipping: Double = 0.0,
         val total: Double = 0.0,
-        val actionMessage: String? = null
+        val actionMessage: String? = null,
+        val stock: Int = 0
     )
 
     private val _uiState = MutableStateFlow(CartUiState())
@@ -46,7 +47,94 @@ class CartViewModel : ViewModel() {
         loadCartItems()
     }
 
-    private fun loadCartItems() {
+
+
+    //validate stock
+    fun validateStock(cartItem: CartItem): Boolean {
+        val stock = _uiState.value.stock
+
+        if (cartItem.quantity > stock) {
+            _uiState.update {
+                it.copy(
+                    errorMessage = "Not enough stock available. Only $stock items left."
+                )
+            }
+            return false
+        } else {
+            _uiState.update {
+                it.copy(
+                    errorMessage = null
+                )
+            }
+            return true
+        }
+    }
+
+    // Separate function to fetch current stock from Firebase
+    fun refreshStockData(cartItem: CartItem, onComplete: ((Int) -> Unit)? = null) {
+        viewModelScope.launch {
+            try {
+                val productRef = database.getReference("products").child(cartItem.productId)
+                val stockSnapshot = productRef.child("stock").get().await()
+                val stock = stockSnapshot.getValue(Int::class.java) ?: 0
+
+                _uiState.update {
+                    it.copy(stock = stock)
+                }
+
+                // Re-validate with new stock data
+                validateStock(cartItem)
+
+                // Call the completion handler if provided
+                onComplete?.invoke(stock)
+            } catch (e: Exception) {
+                _uiState.update {
+                    it.copy(
+                        errorMessage = e.message
+                    )
+                }
+            }
+        }
+    }
+
+    fun updateQuantity(cartItem: CartItem, newQuantity: Int) {
+        if (newQuantity <= 0) {
+            removeCartItem(cartItem)
+            return
+        }
+
+        // First refresh stock data from server, then proceed with quantity update
+        refreshStockData(cartItem) { currentStock ->
+            if (newQuantity <= currentStock) {
+                viewModelScope.launch {
+                    try {
+                        // Update quantity in Firebase
+                        cartRef.child(userId).child(cartItem.id).child("quantity").setValue(newQuantity).await()
+
+                        _uiState.update {
+                            it.copy(
+                                actionMessage = "Quantity updated"
+                            )
+                        }
+                    } catch (e: Exception) {
+                        _uiState.update {
+                            it.copy(
+                                actionMessage = "Failed to update quantity: ${e.message}"
+                            )
+                        }
+                    }
+                }
+            } else {
+                _uiState.update {
+                    it.copy(
+                        errorMessage = "Cannot add more items. Available stock is $currentStock."
+                    )
+                }
+            }
+        }
+    }
+
+     fun loadCartItems() {
         _uiState.update { it.copy(isLoading = true, errorMessage = null) }
 
         cartRef.child(userId).addValueEventListener(object : ValueEventListener {
@@ -91,31 +179,6 @@ class CartViewModel : ViewModel() {
         })
     }
 
-    fun updateQuantity(cartItem: CartItem, newQuantity: Int) {
-        if (newQuantity <= 0) {
-            removeCartItem(cartItem)
-            return
-        }
-
-        viewModelScope.launch {
-            try {
-                // Update quantity in Firebase
-                cartRef.child(userId).child(cartItem.id).child("quantity").setValue(newQuantity).await()
-
-                _uiState.update {
-                    it.copy(
-                        actionMessage = "Quantity updated"
-                    )
-                }
-            } catch (e: Exception) {
-                _uiState.update {
-                    it.copy(
-                        actionMessage = "Failed to update quantity: ${e.message}"
-                    )
-                }
-            }
-        }
-    }
 
     fun removeCartItem(cartItem: CartItem) {
         viewModelScope.launch {

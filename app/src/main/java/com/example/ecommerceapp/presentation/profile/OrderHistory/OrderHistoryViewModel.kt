@@ -95,6 +95,12 @@ class OrderHistoryViewModel : ViewModel() {
                     // Update the stock
                     sizeStockRef.setValue(newStock).await()
 
+                    // Update buyCount (increment) for trending items feature
+                    val buyCountRef = productsRef.child(productId).child("buyCount")
+                    val currentBuyCount = buyCountRef.get().await().getValue(Int::class.java) ?: 0
+                    val newBuyCount = currentBuyCount + 1
+                    buyCountRef.setValue(newBuyCount).await()
+
                     Log.d("OrderHistoryViewModel", "Updated stock for product $productId, $currentStock → $newStock")
                 }
 

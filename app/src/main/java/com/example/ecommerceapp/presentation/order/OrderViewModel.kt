@@ -255,6 +255,11 @@ class OrderViewModel : ViewModel() {
 
                                                     // Update the stock
                                                     productsRef.child(productId).child("stock").setValue(newStock).await()
+
+                                                    // Update buyCount (increment) for trending items feature
+                                                    val currentBuyCount = productSnapshot.child("buyCount").getValue(Int::class.java) ?: 0
+                                                    val newBuyCount = currentBuyCount + 1
+                                                    productsRef.child(productId).child("buyCount").setValue(newBuyCount).await()
                                                 }
                                             }
                                         }
