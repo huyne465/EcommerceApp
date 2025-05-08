@@ -62,7 +62,7 @@ The development of this application involved:
 4. Adding cart functionality and state management
 5. Developing the user authentication system
 6. Integrating with backend APIs
-7. Testing and debugging across multiple devices
+7. Testing and debugging across Android Devices
 8. Refining the UI/UX based on feedback
 
 ## Future Improvements
